@@ -34,7 +34,19 @@ services:
       - ./sql:/flyway/sql
       - ./conf:/flyway/conf
     command: -url=jdbc:mysql://mysql:3306/app_db -user=app_user -password=app_pass migrate
-
+  
+  apache:
+    image: httpd:2.4
+    container_name: apache-server
+    restart: always
+    ports:
+      - "8081:80"
+    volumes:
+      - ./apache:/usr/local/apache2/htdocs/
+#      - ./conf/apache/httpd.conf:/usr/local/apache2/conf/httpd.conf
+    depends_on:
+      - mysql
+  
 volumes:
   mysql_data:
 
