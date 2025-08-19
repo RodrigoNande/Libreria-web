@@ -25,6 +25,15 @@ services:
     depends_on:
       - mysql
 
+  flyway:
+    image: flyway/flyway
+    depends_on:
+      - mysql
+    volumes:
+      - ./sql:/flyway/sql
+      - ./conf:/flyway/conf
+    command: migrate
+
 volumes:
   mysql_data:
 
