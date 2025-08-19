@@ -1,6 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <?php
+    require_once 'conexion.php';
+  
+    ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="estilo1.css">
@@ -36,23 +41,23 @@
     </nav>
 
     <!-- Productos -->
-    <main class="productos">
-         <div class="producto">
-        <img src="C:\Users\josia\Desktop\Yigo pro\Proyectos\Libreria-web/Cuaderno Preescolar B Niño Primavera.webp" alt="caja de lapicero">
-            <h3>Caja de Cuadernos</h3>
-            <p>Precio:<strong>$45.18</strong> 
-            <p>Marca: Primavera</p>
-            <p>Precio Unitario: 1.25</p>
-    </div>
-        <div class="producto">
-            <img src="C:\Users\josia\Desktop\Yigo pro\Proyectos\Libreria-web/Cuaderno Triple Mario Bros 120 hojas Nintendo Foroni.jpg" alt="Bolígrafo Bic">
+   <main class="productos">
+    <a href="formularioproducto.php?id=1" class="producto">
+        <img src="img/cuaderno1.webp" alt="caja de cuadernos">
         <h3>Caja de Cuadernos</h3>
-        <p>Precio: $57.87 
+        <p>Precio: <strong>$45.18</strong></p>
+        <p>Marca: Primavera</p>
+        <p>Precio Unitario: $1.25</p>
+    </a>
+
+    <a href="formularioproducto.php?id=2" class="producto">
+        <img src="img/cuaderno2.jpg" alt="cuaderno triple mario bros">
+        <h3>Caja de Cuadernos</h3>
+        <p>Precio: <strong>$57.87</strong></p>
         <p>Marca: Forger</p>
-        <p>Precio Unitario:$1.75 </p>
-        </div>
-    
-    </main>
+        <p>Precio Unitario: $1.75</p>
+    </a>
+</main>
 </body>
 </html>
 

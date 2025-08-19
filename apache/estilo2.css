@@ -1,0 +1,152 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #ffffff; /* mismo fondo que usaste */
+    color: white;
+}
+           .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #120049;
+            padding: 10px 20px;
+            position: sticky; 
+            top: 0;
+            z-index: 1000;
+        }
+        .logo {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                font-size: 20px;
+                font-weight: bold;
+            }
+
+            .star {
+                color: gold;
+            }
+
+            .search-container {
+                flex: 1;
+                display: flex;
+                margin: 0 20px;
+            }
+
+            .search-container input {
+                flex: 1;
+                padding: 8px;
+                border: none;
+                border-radius: 5px 0 0 5px;
+            }
+
+            .search-button {
+                padding: 8px 12px;
+                border: none;
+                background-color: orange;
+                border-radius: 0 5px 5px 0;
+                cursor: pointer;
+            }
+            .nav-links a {
+                margin-left: 15px;
+                text-decoration: none;
+                color: white;
+            }
+            .menu-secundario {
+                display: flex;
+                justify-content: center;
+                background-color: #120049; /* fondo del header */
+                padding: 15px 0;
+                gap: 20px;
+                border-bottom: 1px solid #ccc;
+            }
+
+.menu-secundario a {
+    text-decoration: none;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 25px; /* redondeados estilo botón */
+    background-color: transparent; /* inicio transparente */
+    border: 2px solid transparent; /* efecto al hacer hover */
+    transition: all 0.3s ease;
+}
+
+.menu-secundario a:hover,
+.menu-secundario a:focus {
+    background-color: #c7d6ff; /* color de fondo hover */
+    color: blue; /* texto azul al pasar el mouse */
+    border-color: blue; /* borde azul para más efecto */
+}
+        .producto {
+            display: flex;
+            gap: 40px;
+            max-width: 900px;
+            margin: auto;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 20px;
+             margin-left: 0;
+            margin-right: auto;
+            float: left;
+        }
+        .producto img {
+            width: 350px;
+            height: auto;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+           
+        }
+        .detalle-producto h2 {
+            margin: 0 0 10px 0;
+            color: black;
+        }
+        .detalle-producto .marca {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .detalle-producto .precio {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #120049;
+        }
+        .detalle-producto .stock {
+            display: inline-block;
+            background: #e6f4ea;
+            color: #2d7a2d;
+            padding: 3px 8px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .detalle-producto button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-carrito {
+            background-color: #34405c;
+            color: white;
+        }
+        .btn-comprar {
+            background-color: #4caf50;
+            color: white;
+        }
+        .btn-whatsapp {
+            background-color: #00c853;
+            color: white;
+            margin-top: 10px;
+            display: inline-block;
+        }
+        .opciones {
+            margin-top: 15px;
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+        }
+        .opciones span {
+            cursor: pointer;
+            color: #555;
+        }
+    
