@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -42,13 +41,22 @@
 
     <!-- Productos -->
    <main class="productos">
-    <a href="formularioproducto.php?id=1" class="producto">
-        <img src="img/cuaderno1.webp" alt="caja de cuadernos">
-        <h3>Caja de Cuadernos</h3>
-        <p>Precio: <strong>$45.18</strong></p>
-        <p>Marca: Primavera</p>
-        <p>Precio Unitario: $1.25</p>
-    </a>
+    <?php    
+    $sql = "SELECT ruta FROM img WHERE idProd = 80";
+    $result = $conn->query($sql);
+    $imgSrc = "";
+    if ($result && $row = $result->fetch_assoc()) {
+        $imgSrc = $row['ruta'];
+    }
+?>
+<a href="formularioproducto.php?id=1" class="producto">
+    <img src="<?php echo "Ruta obtenida: " . htmlspecialchars($imgSrc); ?>" alt="caja de cuadernos">
+    <h3>Caja de Cuadernos</h3>
+    <p>Precio: <strong>$45.18</strong></p>
+    <p>Marca: Primavera</p>
+    <p>Precio Unitario: $1.25</p>
+</a>
+
 
     <a href="formularioproducto.php?id=2" class="producto">
         <img src="img/cuaderno2.jpg" alt="cuaderno triple mario bros">
@@ -58,6 +66,7 @@
         <p>Precio Unitario: $1.75</p>
     </a>
 </main>
+
 </body>
 </html>
 

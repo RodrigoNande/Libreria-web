@@ -1,18 +1,11 @@
 <?php
+$host = "mysql";    // porque expones el puerto al host
+$port = 3306;           // mapeado en docker-compose
+$user = "app_user";     
+$pass = "app_pass";     
+$db   = "app_db";       
 
-$servidor = "mysql";  
-$usuario = "app_user";  
-$contrasena = "app_pass";  
-$baseDatos = "app_bd"; 
-$puerto = 3060;
+$conn = new mysqli($host, $user, $pass, $db, $port);
 
-$conexion = new mysqli($servidor, $usuario, $contrasena, $baseDatos, $puerto);
-
-if ($conexion->connect_error) {
-    die("Error de conexión: " . $conexion->connect_error);
-}
-
-
-$conexion->set_charset("utf8");
 ?>
 

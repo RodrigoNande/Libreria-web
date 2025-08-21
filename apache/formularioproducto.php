@@ -45,7 +45,7 @@
             <div class="precio">Precio Unitario: $1.65</div>
             <div class="stock">96 disponibles</div>
             <div>
-                <button class="btn-carrito">Añadir Al Carrito</button>
+               <br><br><button class="btn-carrito">Añadir Al Carrito</button>
                 <button class="btn-comprar">Comprar Ahora</button>
             </div>
             
