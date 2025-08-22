@@ -1,5 +1,7 @@
 <?php
+session_start();
 require_once 'conexion.php';
+
 
 // Validar y obtener el id del producto
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -12,6 +14,13 @@ $sql = "SELECT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, a.Precio, a
         LIMIT 1";
 $result = $conn->query($sql);
 $producto = $result && $result->num_rows > 0 ? $result->fetch_assoc() : null;
+
+$cantidadCarrito = 0;
+if (isset($_SESSION['carrito'])) {
+    foreach ($_SESSION['carrito'] as $cantidad) {
+        $cantidadCarrito += $cantidad;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -36,7 +45,7 @@ $producto = $result && $result->num_rows > 0 ? $result->fetch_assoc() : null;
             <a href="#">Mis listas</a>
             <a href="#">Mis pedidos</a>
             <a href="#">Mi Cuenta</a>               
-            <a href="#">$0</a>
+            <a href="vercarrito.php">🛒 <?php echo $cantidadCarrito; ?></a>
         </nav>
     </header>
  <nav class="menu-secundario">
@@ -58,7 +67,11 @@ $producto = $result && $result->num_rows > 0 ? $result->fetch_assoc() : null;
             <div class="precio">Precio Unitario: $<?php echo number_format($producto['Precio_Unitario'], 2); ?></div>
             
             <div>
-                <br><br><button class="btn-carrito">Añadir Al Carrito</button>
+                <br><br>
+                <form action="carrito.php" method="get" style="display:inline;">
+                    <input type="hidden" name="id" value="<?php echo $producto['IdProducto']; ?>">
+                    <button type="submit" class="btn-carrito">Añadir Al Carrito</button>
+                </form>
                 <button class="btn-comprar">Comprar Ahora</button>
             </div>
         </div>

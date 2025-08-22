@@ -1,8 +1,9 @@
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background-color: #ffffff; /* mismo fondo que usaste */
-    color: white;
+    background-color: #ffffff; 
+    background: linear-gradient(to bottom, #f0f4ff, #ffffff);
+    color: #333;
 }
 
 /* --- Header --- */
@@ -15,6 +16,7 @@ body {
     position: sticky; /* queda fijo arriba */
     top: 0;
     z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .logo {
@@ -64,22 +66,53 @@ body {
     padding: 20px;
 }
 
-.producto {
+.producto:hover {
+    transform: scale(1.05);
     background: white;
+    background-color: #f9f9ff;
     color: black;
     border-radius: 10px;
     padding: 15px;
     text-align: center;
-    box-shadow: 0px 4px 6px rgba(0,0,0,0.2);
+    box-shadow: 0px 10px 20px rgba(0,0,0,0.3);
     transition: transform 0.2s;
    display: block;
    text-decoration: none;
    
 }
 
+.producto h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 10px 0 5px;
+}
+
+
 .producto:hover {
     transform: scale(1.05);
     box-shadow: 0px 6px 12px rgba(0,0,0,0.3);
+}
+.producto .overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    color: white;
+    opacity: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s;
+    border-radius: 10px;
+}
+
+.producto:hover .overlay {
+    opacity: 1;
+}
+.producto h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 10px 0 5px;
 }
 
 .producto img {
@@ -110,7 +143,13 @@ body {
     transition: all 0.3s ease;
 }
 
-.menu-secundario a:hover,
+.menu-secundario a:hover {
+    background-color: #ffb703;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transform: translateY(-2px);
+}
+
 .menu-secundario a:focus {
     background-color: #c7d6ff; /* color de fondo hover */
     color: blue; /* texto azul al pasar el mouse */

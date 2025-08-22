@@ -1,13 +1,23 @@
-<!DOCTYPE html>
+<?php
+session_start();
+require_once 'conexion.php';
+
+$cantidadCarrito = 0;
+if (isset($_SESSION['carrito'])) {
+    foreach ($_SESSION['carrito'] as $cantidad) {
+        $cantidadCarrito += $cantidad;
+    }
+}
+?>
+    <!DOCTYPE html>
 <html lang="es">
 <head>
-    <?php
-    require_once 'conexion.php';
-  
-    ?>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="estilo1.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
     <title>Librería RL</title>
 </head>
 <body>
@@ -25,8 +35,8 @@
         <nav class="nav-links">
             <a href="#">Mis listas</a>
             <a href="#">Mis pedidos</a>
-            <a href="#">Mi Cuenta</a>               
-            <a href="#">$0</a>
+            <a href="#">Mi Cuenta</a>
+            <a href="vercarrito.php">🛒 <?php echo $cantidadCarrito; ?></a>
         </nav>
     </header>
 

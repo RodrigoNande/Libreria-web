@@ -1,0 +1,86 @@
+/* Fondo general */
+body {
+    background: linear-gradient(120deg, #f8fafc 0%, #e0e7ff 100%);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* Título */
+h1 {
+    text-align: center;
+    color: #3b3b5c;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    letter-spacing: 2px;
+}
+
+/* Tabla del carrito */
+table {
+    margin: 0 auto;
+    border-collapse: collapse;
+    width: 90%;
+    max-width: 800px;
+    background: #fff;
+    box-shadow: 0 4px 24px rgba(60,60,100,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 18px 12px;
+    text-align: center;
+}
+
+th {
+    background: #6366f1;
+    color: #fff;
+    font-size: 1.1em;
+    letter-spacing: 1px;
+}
+
+tr:nth-child(even) {
+    background: #f3f4f6;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+td {
+    color: #444;
+    font-size: 1em;
+}
+
+strong {
+    color: #6366f1;
+    font-size: 1.1em;
+}
+
+/* Botón de seguir comprando */
+a {
+    display: block;
+    width: 200px;
+    margin: 30px auto 0 auto;
+    text-align: center;
+    background: #6366f1;
+    color: #fff;
+    text-decoration: none;
+    padding: 12px 0;
+    border-radius: 8px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    transition: background 0.2s;
+}
+
+a:hover {
+    background: #4338ca;
+    color: #fff;
+}
+
+/* Mensaje de carrito vacío */
+h2 {
+    text-align: center;
+    color: #d97706;
+    margin-top: 60px;
+    font-
