@@ -3,7 +3,7 @@ body {
     font-family: Arial, sans-serif;
     background-color: #ffffff; 
     background: linear-gradient(to bottom, #f0f4ff, #ffffff);
-    color: #333;
+    color: #f5f3f3;
 }
 
 /* --- Header --- */
@@ -56,6 +56,10 @@ body {
     margin-left: 15px;
     text-decoration: none;
     color: white;
+}
+
+a {
+    text-decoration: none;
 }
 
 /* --- Productos en cuadrícula --- */
