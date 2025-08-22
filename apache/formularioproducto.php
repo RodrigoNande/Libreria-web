@@ -1,3 +1,18 @@
+<?php
+require_once 'conexion.php';
+
+// Validar y obtener el id del producto
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+// Consulta para obtener el producto y su imagen
+$sql = "SELECT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, a.Precio, a.Precio_Unitario, i.ruta
+        FROM articulo a
+        LEFT JOIN img i ON a.IdProducto = i.idProd
+        WHERE a.IdProducto = $id
+        LIMIT 1";
+$result = $conn->query($sql);
+$producto = $result && $result->num_rows > 0 ? $result->fetch_assoc() : null;
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -33,30 +48,25 @@
     </nav>
     <h1>Formulario de Compra</h1>
 
-  
-
-     
-        <div class="producto">
-        <img src="img/cuaderno1.webp" alt="Cuaderno Rojo">
+    <?php if ($producto): ?>
+    <div class="producto">
+        <img src="<?php echo $producto['ruta'] ? htmlspecialchars($producto['ruta']) : 'img/no-image.png'; ?>" alt="<?php echo htmlspecialchars($producto['NomProducto']); ?>">
         <div class="detalle-producto">
-            <h2>CUAD #11 COSIDO CUADRO 8MM COLOR 100 HJAS</h2>
-            <div class="marca">Marca: Norma</div>
-            <div class="precio">Precio: $41.25</div>
-            <div class="precio">Precio Unitario: $1.65</div>
-            <div class="stock">96 disponibles</div>
+            <h2><?php echo htmlspecialchars($producto['NomProducto']); ?></h2>
+            <div class="marca">Marca: <?php echo htmlspecialchars($producto['Marca']); ?></div>
+            <div class="precio">Precio: $<?php echo number_format($producto['Precio'], 2); ?></div>
+            <div class="precio">Precio Unitario: $<?php echo number_format($producto['Precio_Unitario'], 2); ?></div>
+            
             <div>
-               <br><br><button class="btn-carrito">Añadir Al Carrito</button>
+                <br><br><button class="btn-carrito">Añadir Al Carrito</button>
                 <button class="btn-comprar">Comprar Ahora</button>
             </div>
-            
-           <!-- <div class="opciones">
-                <span>➕ Añadir para comparar</span>
-                <span>♡ Añadir a la lista de deseos</span>
-                <span>Compartir: 📘 ✉️</span>
-            </div> -->
         </div>
     </div>
-   
+    <?php else: ?>
+        <p>Producto no encontrado.</p>
+    <?php endif; ?>
+
 </body>
 </html>
 

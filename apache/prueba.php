@@ -7,7 +7,7 @@
     ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="estilo1.css">
+   
     <title>Librería RL</title>
 </head>
 <body>
@@ -41,7 +41,6 @@
 
     <!-- Productos -->
    <main class="productos">
-  
 <?php
 // Traemos productos con su imagen
 $sql = "SELECT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, a.Precio, a.Precio_Unitario, i.ruta
@@ -56,7 +55,7 @@ if ($result && $result->num_rows > 0) {
         ?>
         <a href="formularioproducto.php?id=<?php echo $row['IdProducto']; ?>" class="producto">
             <img src="<?php echo $imgSrc; ?>" alt="<?php echo htmlspecialchars($row['NomProducto']); ?>">
-             <h3><?php echo htmlspecialchars($row['NomProducto']); ?></h3>
+            <h3><?php echo htmlspecialchars($row['NomProducto']); ?></h3>
             <p>Precio: <strong>$<?php echo number_format($row['Precio'], 2); ?></strong></p>
             <p>Marca: <?php echo htmlspecialchars($row['Marca']); ?></p>
             <p>Precio Unitario: $<?php echo number_format($row['Precio_Unitario'], 2); ?></p>
@@ -69,12 +68,15 @@ if ($result && $result->num_rows > 0) {
 ?>
 
 
-  
+
+    <a href="formularioproducto.php?id=2" class="producto">
+        <img src="img/cuaderno2.jpg" alt="cuaderno triple mario bros">
+        <h3>Caja de Cuadernos</h3>
+        <p>Precio: <strong>$57.87</strong></p>
+        <p>Marca: Forger</p>
+        <p>Precio Unitario: $1.75</p>
+    </a>
 </main>
 
 </body>
 </html>
-
-
-
-
