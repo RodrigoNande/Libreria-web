@@ -6,7 +6,6 @@ if ($id > 0) {
     if (!isset($_SESSION['carrito'])) {
         $_SESSION['carrito'] = [];
     }
-    // Si ya está en el carrito, suma 1, si no, lo agrega
     if (isset($_SESSION['carrito'][$id])) {
         $_SESSION['carrito'][$id]++;
     } else {
@@ -14,4 +13,4 @@ if ($id > 0) {
     }
 }
 header('Location: home.php');
-exit;
+?>

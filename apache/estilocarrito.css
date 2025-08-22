@@ -1,4 +1,4 @@
-/* Fondo general */
+
 body {
     background: linear-gradient(120deg, #f8fafc 0%, #e0e7ff 100%);
     font-family: 'Segoe UI', Arial, sans-serif;
@@ -15,7 +15,7 @@ h1 {
     letter-spacing: 2px;
 }
 
-/* Tabla del carrito */
+
 table {
     margin: 0 auto;
     border-collapse: collapse;

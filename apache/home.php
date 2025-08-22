@@ -21,7 +21,6 @@ if (isset($_SESSION['carrito'])) {
     <title>Librería RL</title>
 </head>
 <body>
-    <!-- Encabezado principal -->
     <header class="header">
         <div class="logo">
             <button class="menu">☰</button>
@@ -40,7 +39,6 @@ if (isset($_SESSION['carrito'])) {
         </nav>
     </header>
 
-    <!-- Menú secundario -->
     <nav class="menu-secundario">
         <a href="#">INICIO</a>
         <a href="#">SOBRE NOSOTROS</a>
@@ -49,11 +47,9 @@ if (isset($_SESSION['carrito'])) {
         <a href="#">TIENDA</a>
     </nav>
 
-    <!-- Productos -->
    <main class="productos">
   
 <?php
-// Traemos productos con su imagen
 $sql = "SELECT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, a.Precio, a.Precio_Unitario, i.ruta
         FROM articulo a
         LEFT JOIN img i ON a.IdProducto = i.idProd";
@@ -61,7 +57,6 @@ $result = $conn->query($sql);
 
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
-        // Si no hay imagen, usamos una por defecto
         $imgSrc = $row['ruta'] ? htmlspecialchars($row['ruta']) : "img/no-image.png";
         ?>
         <a href="formularioproducto.php?id=<?php echo $row['IdProducto']; ?>" class="producto">

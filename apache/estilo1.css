@@ -69,11 +69,14 @@ a {
     gap: 20px;
     padding: 20px;
 }
-
+.producto
+{
+    color:black
+}
 .producto:hover {
     transform: scale(1.05);
-    background: white;
-    background-color: #f9f9ff;
+    background: #6c6c89;
+    background-color: #6c6c89;
     color: black;
     border-radius: 10px;
     padding: 15px;
@@ -85,17 +88,7 @@ a {
    
 }
 
-.producto h3 {
-    font-size: 18px;
-    font-weight: 600;
-    margin: 10px 0 5px;
-}
 
-
-.producto:hover {
-    transform: scale(1.05);
-    box-shadow: 0px 6px 12px rgba(0,0,0,0.3);
-}
 .producto .overlay {
     position: absolute;
     top: 0; left: 0;
@@ -114,9 +107,10 @@ a {
     opacity: 1;
 }
 .producto h3 {
-    font-size: 18px;
+    font-size: 22px;
     font-weight: 600;
     margin: 10px 0 5px;
+    color: black;
 }
 
 .producto img {

@@ -10,7 +10,6 @@ if (empty($carrito)) {
     exit;
 }
 
-// Obtener los productos del carrito desde la base de datos
 $ids = implode(',', array_keys($carrito));
 $sql = "SELECT IdProducto, NomProducto, Precio, Precio_Unitario FROM articulo WHERE IdProducto IN ($ids)";
 $result = $conn->query($sql);
