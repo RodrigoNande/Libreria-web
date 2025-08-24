@@ -120,7 +120,7 @@ a {
     border-radius: 8px;
 }
 
-/* Menú secundario */
+/* --- Menú secundario --- */
 .menu-secundario {
     display: flex;
     justify-content: center;
@@ -130,28 +130,92 @@ a {
     border-bottom: 1px solid #ccc;
 }
 
-.menu-secundario a {
+.menu-secundario a,
+.dropbtn {
     text-decoration: none;
     color: #ffffff;
     font-weight: 600;
     padding: 10px 20px;
-    border-radius: 25px; /* redondeados estilo botón */
-    background-color: transparent; /* inicio transparente */
-    border: 2px solid transparent; /* efecto al hacer hover */
+    border-radius: 25px;
+    background-color: transparent;
+    border: 2px solid transparent;
     transition: all 0.3s ease;
+    font-size: 14px;
+    display: inline-block;
+    line-height: 1.5; /* alineación uniforme */
 }
 
-.menu-secundario a:hover {
+.menu-secundario a:hover,
+.dropbtn:hover {
     background-color: #ffb703;
     color: white;
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     transform: translateY(-2px);
 }
 
-.menu-secundario a:focus {
-    background-color: #c7d6ff; /* color de fondo hover */
-    color: blue; /* texto azul al pasar el mouse */
-    border-color: blue; /* borde azul para más efecto */
+/* Dropdown */
+.dropdown {
+    position: relative;
+    display: inline-block;
 }
 
+/* Contenedor del desplegable */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%); /* centrado */
+    top: 100%;
+    background-color: #ffffff;
+    padding: 25px;
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+    z-index: 1000;
+    min-width: 900px; /* ancho del panel */
+    border-radius: 10px;
+}
 
+/* Mostrar al pasar */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* Grid de categorías */
+.categorias-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+}
+
+/* Títulos de columnas */
+.columna h4 {
+    margin-bottom: 10px;
+    font-size: 15px;
+    font-weight: bold;
+    color: #120049;
+    border-bottom: 2px solid blue;
+    padding-bottom: 4px;
+}
+
+/* Listas */
+.columna ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.columna ul li {
+    margin: 6px 0;
+    line-height: 1.4;
+}
+
+.columna ul li a {
+    text-decoration: none;
+    color: #000;
+    font-size: 14px;
+    display: block;
+}
+
+.columna ul li a:hover {
+    color: #ff6600;
+    text-decoration: underline;
+}
