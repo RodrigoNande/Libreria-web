@@ -1,4 +1,4 @@
-- Tiempo de generación: 24-08-2025 a las 18:39:55
+
 -- Versión del servidor: 8.0.42
 -- Versión de PHP: 8.2.27
 
