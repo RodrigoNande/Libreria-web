@@ -1,14 +1,15 @@
 <?php
+ob_start();
 session_start();
 require_once 'conexion.php';
 
 // Procesar acciones del carrito
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $accion = $_POST['accion'] ?? '';
-    $producto_id = intval($_POST['producto_id'] ?? 0);
+    $producto_id = $_POST['producto_id'] ?? '';
     $nueva_cantidad = intval($_POST['cantidad'] ?? 0);
-    
-    if ($producto_id > 0) {
+
+    if ($producto_id !== '') {
         switch ($accion) {
             case 'actualizar':
                 if ($nueva_cantidad > 0) {
@@ -17,15 +18,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     unset($_SESSION['carrito'][$producto_id]);
                 }
                 break;
-                
+
             case 'eliminar':
                 unset($_SESSION['carrito'][$producto_id]);
                 break;
-                
+
             case 'incrementar':
                 $_SESSION['carrito'][$producto_id] = ($_SESSION['carrito'][$producto_id] ?? 0) + 1;
                 break;
-                
+
             case 'decrementar':
                 if (($_SESSION['carrito'][$producto_id] ?? 0) > 1) {
                     $_SESSION['carrito'][$producto_id]--;
@@ -35,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
         }
     }
-    
+
     // Redireccionar para evitar reenvío del formulario
     header('Location: vercarrito.php');
     exit;
@@ -50,7 +51,7 @@ $carrito = isset($_SESSION['carrito']) ? $_SESSION['carrito'] : [];
     <meta charset="UTF-8">
     <title>Carrito de Compras - Librería RL</title>
     <link rel="stylesheet" href="estilocarrito.css">
-    <link rel="stylesheet" href="carrito-mejorado.css">
+    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -69,11 +70,16 @@ $carrito = isset($_SESSION['carrito']) ? $_SESSION['carrito'] : [];
             </div>
         <?php else: ?>
             <?php
-            $ids = implode(',', array_keys($carrito));
-            $sql = "SELECT a.IdProducto, a.NomProducto, a.Precio, a.Precio_Unitario, a.Marca, i.ruta
-                    FROM articulo a
-                    LEFT JOIN img i ON a.IdProducto = i.idProd
-                    WHERE a.IdProducto IN ($ids)";
+            $ids = array_map(function($id) use ($conn) {
+                return "'" . $conn->real_escape_string($id) . "'";
+            }, array_keys($carrito));
+            $ids = implode(',', $ids);
+            
+           $ids_quoted = "'" . implode("','", array_keys($carrito)) . "'";
+            $sql = "SELECT a.IdProducto, a.NomProducto, a.Precio, i.ruta
+            FROM articulo a
+            LEFT JOIN img i ON a.IdProducto = i.idProd
+            WHERE a.IdProducto IN ($ids_quoted)";
             $result = $conn->query($sql);
             
             $productos = [];
@@ -115,7 +121,7 @@ $carrito = isset($_SESSION['carrito']) ? $_SESSION['carrito'] : [];
                     ?>
                     <div class="item-carrito" data-producto-id="<?php echo $id; ?>">
                         <div class="item-imagen">
-                            <img src="<?php echo $imgSrc; ?>" alt="<?php echo htmlspecialchars($producto['NomProducto']); ?>">
+                            <img src="<?php echo $imgSrc; ?>" alt="<?php echo htmlspecialchars($producto['NomProducto']); ?>" class="item-image">
                         </div>
                         
                         <div class="item-info">

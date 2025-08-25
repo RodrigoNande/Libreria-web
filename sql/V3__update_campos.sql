@@ -11,3 +11,6 @@ ALTER TABLE Categoria
 ADD CONSTRAINT fk_categoria_padre
 FOREIGN KEY (IdCategoriaPadre) REFERENCES Categoria(Id)
 ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE articulo
+MODIFY COLUMN Precio_Unitario DECIMAL(10,2);

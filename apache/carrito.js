@@ -19,19 +19,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // VISTA PREVIA DEL CARRITO
     // ==========================================
     
-    carritoToggle.addEventListener('click', function(e) {
-        e.preventDefault();
-        if (!vistaAbbierta) {
-            cargarVistaPrevia();
-            mostrarVistaPrevia();
-        } else {
-            ocultarVistaPrevia();
-        }
-    });
+    if (carritoToggle) {
+        carritoToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!vistaAbbierta) {
+                cargarVistaPrevia();
+                mostrarVistaPrevia();
+            } else {
+                ocultarVistaPrevia();
+            }
+        });
+    }
 
-    cerrarVistaPrevia.addEventListener('click', function() {
-        ocultarVistaPrevia();
-    });
+    if (cerrarVistaPrevia) {
+        cerrarVistaPrevia.addEventListener('click', function() {
+            ocultarVistaPrevia();
+        });
+    }
 
     // Cerrar vista previa al hacer clic fuera
     document.addEventListener('click', function(e) {
@@ -41,24 +45,33 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function mostrarVistaPrevia() {
-        vistaPrevia.classList.remove('vista-previa-oculta');
-        setTimeout(() => {
-            vistaPrevia.classList.add('mostrar');
-        }, 10);
-        vistaAbbierta = true;
+        if (vistaPrevia) {
+            vistaPrevia.classList.remove('vista-previa-oculta');
+            setTimeout(() => {
+                vistaPrevia.classList.add('mostrar');
+            }, 10);
+            vistaAbbierta = true;
+        }
     }
 
     function ocultarVistaPrevia() {
-        vistaPrevia.classList.remove('mostrar');
-        setTimeout(() => {
-            vistaPrevia.classList.add('vista-previa-oculta');
-        }, 300);
-        vistaAbbierta = false;
+        if (vistaPrevia) {
+            vistaPrevia.classList.remove('mostrar');
+            setTimeout(() => {
+                vistaPrevia.classList.add('vista-previa-oculta');
+            }, 300);
+            vistaAbbierta = false;
+        }
     }
 
     function cargarVistaPrevia() {
         fetch('vistapreviacarrito.php')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error HTTP: ' + response.status);
+                }
+                return response.json();
+            })
             .then(data => {
                 const contenedor = document.getElementById('productos-vista-previa');
                 
@@ -92,11 +105,15 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error al cargar vista previa:', error);
-                document.getElementById('productos-vista-previa').innerHTML = `
-                    <div class="carrito-vacio">
-                        <p>Error al cargar el carrito</p>
-                    </div>
-                `;
+                const contenedor = document.getElementById('productos-vista-previa');
+                if (contenedor) {
+                    contenedor.innerHTML = `
+                        <div class="carrito-vacio">
+                            <p>Error al cargar el carrito</p>
+                            <small>${error.message}</small>
+                        </div>
+                    `;
+                }
             });
     }
 
@@ -112,6 +129,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const productoNombre = this.dataset.nombre;
             const productoPrecio = this.dataset.precio;
             
+            // Validar datos
+            if (!productoId || !productoNombre || !productoPrecio) {
+                console.error('Datos del producto incompletos', {
+                    id: productoId,
+                    nombre: productoNombre,
+                    precio: productoPrecio
+                });
+                alert('Error: Datos del producto incompletos');
+                return;
+            }
+            
             // Cambiar estado del botón
             const botonOriginal = this.innerHTML;
             this.innerHTML = 'Agregando...';
@@ -124,10 +152,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `id=${productoId}&accion=agregar`
+                body: `id=${encodeURIComponent(productoId)}&accion=agregar`
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+                }
+                
+                return response.text().then(text => {
+                    console.log('Response text:', text);
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        throw new Error(`Error parsing JSON: ${e.message}. Response: ${text.substring(0, 200)}...`);
+                    }
+                });
+            })
             .then(data => {
+                console.log('Data received:', data);
+                
                 // Restaurar botón
                 this.innerHTML = botonOriginal;
                 this.classList.remove('agregando');
@@ -146,54 +192,69 @@ document.addEventListener('DOMContentLoaded', function() {
                         this.style.background = '';
                     }, 1000);
                 } else {
-                    alert('Error al agregar el producto al carrito');
+                    alert('Error: ' + (data.mensaje || 'Error desconocido'));
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error completo:', error);
+                
+                // Restaurar botón
                 this.innerHTML = botonOriginal;
                 this.classList.remove('agregando');
                 this.disabled = false;
-                alert('Error de conexión. Intenta de nuevo.');
+                
+                alert('Error de conexión: ' + error.message + '\nRevisa la consola para más detalles.');
             });
         });
     });
 
     function actualizarContadorCarrito(cantidad) {
-        contadorCarrito.textContent = cantidad;
-        contadorCarrito.style.animation = 'none';
-        setTimeout(() => {
-            contadorCarrito.style.animation = 'pulse 0.5s ease-in-out';
-        }, 10);
+        if (contadorCarrito) {
+            contadorCarrito.textContent = cantidad;
+            contadorCarrito.style.animation = 'none';
+            setTimeout(() => {
+                contadorCarrito.style.animation = 'pulse 0.5s ease-in-out';
+            }, 10);
+        }
     }
 
     function mostrarModalConfirmacion(nombre, precio) {
         const mensajeProducto = document.getElementById('mensaje-producto');
-        mensajeProducto.innerHTML = `<strong>${nombre}</strong><br>$${parseFloat(precio).toFixed(2)} agregado a tu carrito`;
-        
-        overlay.classList.remove('overlay-oculto');
-        modal.classList.remove('modal-oculto');
-        
-        setTimeout(() => {
-            overlay.classList.add('mostrar');
-            modal.classList.add('mostrar');
-        }, 10);
+        if (mensajeProducto && overlay && modal) {
+            mensajeProducto.innerHTML = `<strong>${nombre}</strong><br>$${parseFloat(precio).toFixed(2)} agregado a tu carrito`;
+            
+            overlay.classList.remove('overlay-oculto');
+            modal.classList.remove('modal-oculto');
+            
+            setTimeout(() => {
+                overlay.classList.add('mostrar');
+                modal.classList.add('mostrar');
+            }, 10);
+        }
     }
 
     function ocultarModal() {
-        overlay.classList.remove('mostrar');
-        modal.classList.remove('mostrar');
-        
-        setTimeout(() => {
-            overlay.classList.add('overlay-oculto');
-            modal.classList.add('modal-oculto');
-        }, 300);
+        if (overlay && modal) {
+            overlay.classList.remove('mostrar');
+            modal.classList.remove('mostrar');
+            
+            setTimeout(() => {
+                overlay.classList.add('overlay-oculto');
+                modal.classList.add('modal-oculto');
+            }, 300);
+        }
     }
 
     // Event listeners para cerrar modal
-    cerrarModal.addEventListener('click', ocultarModal);
-    continuarComprando.addEventListener('click', ocultarModal);
-    overlay.addEventListener('click', ocultarModal);
+    if (cerrarModal) {
+        cerrarModal.addEventListener('click', ocultarModal);
+    }
+    if (continuarComprando) {
+        continuarComprando.addEventListener('click', ocultarModal);
+    }
+    if (overlay) {
+        overlay.addEventListener('click', ocultarModal);
+    }
 
     // Cerrar modal con Escape
     document.addEventListener('keydown', function(e) {
@@ -225,15 +286,19 @@ document.addEventListener('DOMContentLoaded', function() {
     let timeoutModal;
     function autoCloseModal() {
         timeoutModal = setTimeout(() => {
-            if (modal.classList.contains('mostrar')) {
+            if (modal && modal.classList.contains('mostrar')) {
                 ocultarModal();
             }
         }, 10000);
     }
 
     // Limpiar timeout si se cierra manualmente
-    cerrarModal.addEventListener('click', () => clearTimeout(timeoutModal));
-    continuarComprando.addEventListener('click', () => clearTimeout(timeoutModal));
+    if (cerrarModal) {
+        cerrarModal.addEventListener('click', () => clearTimeout(timeoutModal));
+    }
+    if (continuarComprando) {
+        continuarComprando.addEventListener('click', () => clearTimeout(timeoutModal));
+    }
 
     // Activar auto-close cuando se muestra el modal
     const originalMostrarModal = mostrarModalConfirmacion;
