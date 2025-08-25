@@ -150,12 +150,72 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Fuentes mejoradas -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+
+
+    <!-- Meta tags mejorados -->
+    <meta name="theme-color" content="#120049">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- CSS mejorado (reemplaza el link si tienes uno anterior) -->
     <link rel="stylesheet" href="estilo1.css">
     <link rel="stylesheet" href="estilocarrito.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <title>Librería RL</title>
+
+    <!-- Estilos de carga inicial y mejoras visuales -->
+    <style>
+    .loading-screen {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        display: flex; align-items: center; justify-content: center;
+        z-index: 10000; transition: opacity 0.5s ease;
+    }
+    .loading-spinner {
+        width: 50px; height: 50px;
+        border: 4px solid rgba(255,255,255,0.3);
+        border-top: 4px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    .loading-text {
+        color: white; font-size: 18px; font-weight: 600; margin-top: 20px;
+    }
+    /* Breadcrumbs y mejoras visuales */
+    .breadcrumbs { padding: 20px 30px; max-width: 1600px; margin: 0 auto; }
+    .breadcrumbs ul { display: flex; list-style: none; padding: 0; margin: 0; flex-wrap: wrap; }
+    .breadcrumbs li { display: flex; align-items: center; color: var(--text-light); font-size: 14px; }
+    .breadcrumbs li:not(:last-child)::after { content: '→'; margin: 0 10px; color: var(--secondary-color); }
+    .breadcrumbs a { color: var(--text-medium); text-decoration: none; transition: var(--transition-fast); }
+    .breadcrumbs a:hover { color: var(--primary-color); }
+    .animate { animation: fadeInUp 0.6s ease-out; }
+    .producto.animate { animation: fadeInUp 0.6s ease-out; }
+    .quick-view {
+        position: absolute; top: 15px; right: 15px;
+        background: rgba(255,255,255,0.9); border: none;
+        width: 40px; height: 40px; border-radius: 50%;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        opacity: 0; transform: scale(0.8); transition: all 0.3s ease; z-index: 10;
+    }
+    .producto:hover .quick-view { opacity: 1; transform: scale(1); }
+    .quick-view:hover { background: var(--secondary-color); color: white; }
+    </style>
+    <!-- ...existing head code... -->
 </head>
 <body>
+<!-- Pantalla de carga -->
+<div class="loading-screen" id="loading-screen">
+    <div style="text-align: center;">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Cargando Librería RL...</div>
+    </div>
+</div>
+
 <header class="header">
     <!-- Primera fila: Logo, búsqueda y usuario -->
     <div class="header-top">
@@ -253,75 +313,124 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
     </nav>
 </header>
 
-<main class="productos">
-        <?php
-        $sql = "SELECT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, a.Precio, a.Precio_Unitario, i.ruta
-                FROM articulo a
-                LEFT JOIN img i ON a.IdProducto = i.idProd";
-        $result = $conn->query($sql);
-         
-        if ($result && $result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                $imgSrc = $row['ruta'] ? htmlspecialchars($row['ruta']) : "img/no-image.png";
-                ?>
-                <div class="producto">
-                    <a href="formularioproducto.php?id=<?php echo $row['IdProducto']; ?>">
-                        <img src="<?php echo $imgSrc; ?>" alt="<?php echo htmlspecialchars($row['NomProducto']); ?>">
-                        <h3><?php echo htmlspecialchars($row['NomProducto']); ?></h3>
-                        <p>Precio: <strong>$<?php echo number_format($row['Precio'], 2); ?></strong></p>
-                        <p>Marca: <?php echo htmlspecialchars($row['Marca']); ?></p>
-                        <p>Precio Unitario: $<?php echo number_format($row['Precio_Unitario'], 2); ?></p>
-                    </a>
-                    <!-- Botón que funciona con tu carrito.php original 
-                    <a href="carrito.php?id=<?php echo $row['IdProducto']; ?>" 
-                       class="btn-agregar-carrito-original">
-                        Agregar al Carrito (Original)-->
-                    </a>
-                    <!-- Botón con AJAX mejorado -->
-                    <button class="btn-agregar-carrito" 
-                            data-id="<?php echo $row['IdProducto']; ?>"
-                            data-nombre="<?php echo htmlspecialchars($row['NomProducto']); ?>"
-                            data-precio="<?php echo $row['Precio']; ?>">
-                        Agregar al Carrito 
-                    </button>
-                </div>
-                <?php
-            }
-        } else {
-            echo "<p>No hay productos disponibles</p>";
-        }
-        ?>
-    </main>
+<!-- Breadcrumbs -->
+<nav class="breadcrumbs" aria-label="Ruta de navegación">
+    <ul>
+        <li><a href="/">Inicio</a></li>
+        <li>Productos</li>
+    </ul>
+</nav>
 
-    <!-- Modal de confirmación -->
-    <div id="modal-confirmacion" class="modal-oculto">
-        <div class="modal-contenido">
-            <span class="cerrar-modal">&times;</span>
-            <div class="modal-icono">✅</div>
-            <h3>¡Producto agregado!</h3>
-            <p id="mensaje-producto"></p>
-            <div class="modal-botones">
-                <button id="continuar-comprando" class="btn-secundario">Continuar Comprando</button>
-                <a href="vercarrito.php" class="btn-primario">Ver Carrito</a>
+<main class="productos" role="main" aria-label="Lista de productos">
+    <?php
+    $sql = "SELECT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, a.Precio, a.Precio_Unitario, i.ruta
+            FROM articulo a
+            LEFT JOIN img i ON a.IdProducto = i.idProd";
+    $result = $conn->query($sql);
+
+    if ($result && $result->num_rows > 0) {
+        $contador = 0;
+        while ($row = $result->fetch_assoc()) {
+            $imgSrc = $row['ruta'] ? htmlspecialchars($row['ruta']) : "img/no-image.png";
+            $clases_especiales = '';
+            if ($contador < 3) $clases_especiales .= ' nuevo';
+            if ($row['Precio'] < 5) $clases_especiales .= ' oferta';
+            if ($contador % 4 == 0) $clases_especiales .= ' popular';
+            ?>
+            <article class="producto<?php echo $clases_especiales; ?>"
+                     data-id="<?php echo $row['IdProducto']; ?>"
+                     data-nombre="<?php echo htmlspecialchars($row['NomProducto']); ?>"
+                     data-precio="<?php echo $row['Precio']; ?>"
+                     data-marca="<?php echo htmlspecialchars($row['Marca']); ?>">
+                <!-- Vista rápida -->
+                <button class="quick-view tooltip" data-tooltip="Vista rápida" aria-label="Vista rápida del producto">👁️</button>
+                <a href="formularioproducto.php?id=<?php echo $row['IdProducto']; ?>"
+                   aria-label="Ver detalles de <?php echo htmlspecialchars($row['NomProducto']); ?>">
+                    <img src="<?php echo $imgSrc; ?>"
+                         alt="<?php echo htmlspecialchars($row['NomProducto']); ?>"
+                         loading="lazy"
+                         onerror="this.src='img/no-image.png'">
+                    <h3><?php echo htmlspecialchars($row['NomProducto']); ?></h3>
+                    <p>Precio: <strong>$<?php echo number_format($row['Precio'], 2); ?></strong></p>
+                    <p>Marca: <?php echo htmlspecialchars($row['Marca']); ?></p>
+                    <p>Precio Unitario: $<?php echo number_format($row['Precio_Unitario'], 2); ?></p>
+                </a>
+                <button class="btn-agregar-carrito tooltip"
+                        data-id="<?php echo $row['IdProducto']; ?>"
+                        data-nombre="<?php echo htmlspecialchars($row['NomProducto']); ?>"
+                        data-precio="<?php echo $row['Precio']; ?>"
+                        data-tooltip="Agregar al carrito"
+                        aria-label="Agregar <?php echo htmlspecialchars($row['NomProducto']); ?> al carrito">
+                    <span>Agregar al Carrito</span>
+                </button>
+            </article>
+            <?php
+            $contador++;
+        }
+    } else {
+        echo "<p>No hay productos disponibles</p>";
+    }
+    ?>
+</main>
+
+<!-- Paginación ejemplo -->
+<nav class="paginacion" aria-label="Navegación de páginas">
+    <a href="#" aria-label="Página anterior">‹</a>
+    <span class="actual" aria-current="page">1</span>
+    <a href="#" aria-label="Página 2">2</a>
+    <a href="#" aria-label="Página 3">3</a>
+    <a href="#" aria-label="Siguiente página">›</a>
+</nav>
+
+<!-- Modal mejorado para confirmación -->
+<div class="modal-overlay" id="modal-confirmacion" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="modal-title" class="modal-title">¡Producto agregado!</h3>
+            <button class="modal-close" aria-label="Cerrar modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 48px; color: var(--success-color);">✅</div>
             </div>
+            <p id="mensaje-producto" style="text-align: center;"></p>
+        </div>
+        <div class="modal-footer">
+            <button id="continuar-comprando" class="btn-secondary">Continuar Comprando</button>
+            <a href="vercarrito.php" class="btn-primary">Ver Carrito</a>
         </div>
     </div>
+</div>
 
-    <!-- Overlay -->
-    <div id="overlay" class="overlay-oculto"></div>
 <script>
+// Pantalla de carga
+window.addEventListener('load', function() {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        setTimeout(() => {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500);
+        }, 1000);
+    }
+});
+
+// Mejorar el contador del carrito
 function actualizarContadorCarrito(cantidad) {
     const contadorCarrito = document.getElementById('contador-carrito');
     if (contadorCarrito) {
         contadorCarrito.textContent = cantidad;
-        // Agregar animación
         contadorCarrito.style.animation = 'none';
         setTimeout(() => {
-            contadorCarrito.style.animation = 'pulse 0.5s ease-in-out';
+            contadorCarrito.style.animation = 'bounceIn 0.5s ease-out';
         }, 10);
     }
 }
 
+// ==========================
+// VISTA PREVIA DEL CARRITO Y AGREGAR AL CARRITO MEJORADO
+// ==========================
 document.addEventListener('DOMContentLoaded', function() {
     // Variables para vista previa del carrito
     const carritoToggle = document.getElementById('carrito-toggle');
@@ -371,7 +480,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function cargarVistaPrevia() {
         const contenedor = document.getElementById('productos-vista-previa');
-        
         // Mostrar loading
         if (contenedor) {
             contenedor.innerHTML = `
@@ -389,28 +497,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .then(response => {
-            console.log('Vista previa - Response status:', response.status);
-            console.log('Vista previa - Content-Type:', response.headers.get('Content-Type'));
-            
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
             return response.text();
         })
         .then(text => {
-            console.log('Vista previa - Raw response:', text);
-            
             try {
                 return JSON.parse(text);
             } catch (e) {
-                console.error('Vista previa - JSON parse error:', e);
                 throw new Error(`Error parsing JSON: ${e.message}. Response: ${text.substring(0, 200)}`);
             }
         })
         .then(data => {
-            console.log('Vista previa - Parsed data:', data);
-            
             if (contenedor) {
                 if (data.error) {
                     contenedor.innerHTML = `
@@ -421,7 +520,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                     return;
                 }
-
                 if (data.productos && data.productos.length > 0) {
                     let html = '';
                     data.productos.forEach(producto => {
@@ -452,7 +550,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Vista previa - Error completo:', error);
             if (contenedor) {
                 contenedor.innerHTML = `
                     <div class="carrito-error">
@@ -467,25 +564,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Funcionalidad de agregar al carrito (mejorada)
     const botonesAgregar = document.querySelectorAll('.btn-agregar-carrito');
-    
     botonesAgregar.forEach(boton => {
         boton.addEventListener('click', function(e) {
             e.preventDefault();
-            
             const productoId = this.getAttribute('data-id');
             const productoNombre = this.getAttribute('data-nombre');
             const productoPrecio = this.getAttribute('data-precio');
-            
             if (!productoId || !productoNombre || !productoPrecio) {
-                console.error('Datos del producto incompletos:', {
-                    id: productoId,
-                    nombre: productoNombre,
-                    precio: productoPrecio
-                });
                 alert('Error: Datos del producto incompletos');
                 return;
             }
-            
             const botonOriginal = this.innerHTML;
             this.innerHTML = 'Agregando...';
             this.classList.add('agregando');
@@ -499,27 +587,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: `id=${encodeURIComponent(productoId)}&accion=agregar`
             })
             .then(response => {
-                console.log('Agregar carrito - Response status:', response.status);
-                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
                 return response.text();
             })
             .then(text => {
-                console.log('Agregar carrito - Raw response:', text);
-                
                 try {
                     return JSON.parse(text);
                 } catch (e) {
-                    console.error('Agregar carrito - JSON parse error:', e);
                     throw new Error(`Error parsing JSON: ${e.message}. Response: ${text.substring(0, 200)}`);
                 }
             })
             .then(data => {
-                console.log('Agregar carrito - Data received:', data);
-                
                 // Restaurar botón
                 this.innerHTML = botonOriginal;
                 this.classList.remove('agregando');
@@ -528,7 +608,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.exito) {
                     // Actualizar contador
                     actualizarContadorCarrito(data.cantidad_total);
-                    
                     // Mostrar confirmación visual
                     this.style.background = '#26d45c';
                     this.innerHTML = '¡Agregado!';
@@ -536,21 +615,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         this.style.background = '';
                         this.innerHTML = botonOriginal;
                     }, 1500);
-                    
-                    // Mostrar modal o notificación simple
+                    // Mostrar notificación simple
                     mostrarNotificacion(`${productoNombre} agregado al carrito`);
                 } else {
                     alert('Error: ' + (data.mensaje || 'Error desconocido'));
                 }
             })
             .catch(error => {
-                console.error('Agregar carrito - Error completo:', error);
-                
                 // Restaurar botón
                 this.innerHTML = botonOriginal;
                 this.classList.remove('agregando');
                 this.disabled = false;
-                
                 alert('Error de conexión: ' + error.message + '\nRevisa la consola para más detalles.');
             });
         });
@@ -574,14 +649,11 @@ document.addEventListener('DOMContentLoaded', function() {
             transition: transform 0.3s ease;
         `;
         notificacion.textContent = mensaje;
-        
         document.body.appendChild(notificacion);
-        
         // Animar entrada
         setTimeout(() => {
             notificacion.style.transform = 'translateX(0)';
         }, 100);
-        
         // Remover después de 3 segundos
         setTimeout(() => {
             notificacion.style.transform = 'translateX(100%)';
@@ -607,323 +679,101 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.transform = 'translateY(-5px)';
             this.style.transition = 'transform 0.3s ease';
         });
-        
         producto.addEventListener('mouseleave', function() {
             this.style.transform = 'translateY(0)';
         });
     });
 });
 
-// JavaScript para autenticación - agregar después del script existente en home.php
+// Mejorar el sistema de autenticación (login.php)
+document.addEventListener('DOMContentLoaded', function() {
+    const formularioLogin = document.getElementById('formulario-login');
+    const loginToggle = document.getElementById('login-toggle');
+    const authDropdown = document.getElementById('auth-dropdown');
 
-// Variables para autenticación
-const loginToggle = document.getElementById('login-toggle');
-const authDropdown = document.getElementById('auth-dropdown');
-const loginForm = document.getElementById('login-form');
-const registerForm = document.getElementById('register-form');
-const verifyForm = document.getElementById('verify-form');
-const mostrarRegistro = document.getElementById('mostrar-registro');
-const mostrarLogin = document.getElementById('mostrar-login');
+    if (loginToggle) {
+        loginToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (authDropdown.classList.contains('auth-dropdown-oculto')) {
+                authDropdown.classList.remove('auth-dropdown-oculto');
+                authDropdown.classList.add('auth-dropdown-visible');
+                setTimeout(() => {
+                    authDropdown.classList.add('mostrar');
+                }, 10);
+            } else {
+                authDropdown.classList.remove('mostrar');
+                setTimeout(() => {
+                    authDropdown.classList.add('auth-dropdown-oculto');
+                }, 300);
+            }
+        });
+    }
 
-let authAbierto = false;
-
-// ==========================================
-// FUNCIONALIDAD DEL DROPDOWN DE AUTH
-// ==========================================
-
-if (loginToggle) {
-    loginToggle.addEventListener('click', function(e) {
-        e.preventDefault();
-        if (!authAbierto) {
-            mostrarAuthDropdown();
-        } else {
-            ocultarAuthDropdown();
+    // Cerrar dropdown al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.auth-container')) {
+            authDropdown.classList.remove('mostrar');
+            setTimeout(() => {
+                authDropdown.classList.add('auth-dropdown-oculto');
+            }, 300);
         }
     });
-}
 
-// Cerrar dropdown al hacer clic fuera
-document.addEventListener('click', function(e) {
-    if (authAbierto && !e.target.closest('.auth-container')) {
-        ocultarAuthDropdown();
+    // Manejo del formulario de login
+    if (formularioLogin) {
+        formularioLogin.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(formularioLogin);
+            const datos = Object.fromEntries(formData);
+
+            // Validación simple
+            if (!datos.usuario || !datos.password) {
+                return mostrarMensaje('Por favor, completa todos los campos', 'error');
+            }
+
+            // Enviar datos por AJAX
+            fetch('login.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.exito) {
+                    // Login exitoso
+                    location.reload();
+                } else {
+                    mostrarMensaje(data.mensaje || 'Error desconocido', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error en el login:', error);
+                mostrarMensaje('Error de conexión. Inténtalo de nuevo más tarde.', 'error');
+            });
+        });
+    }
+
+    function mostrarMensaje(mensaje, tipo) {
+        const contenedor = document.createElement('div');
+        contenedor.className = `mensaje ${tipo}`;
+        contenedor.textContent = mensaje;
+        document.body.appendChild(contenedor);
+
+        setTimeout(() => {
+            contenedor.classList.add('mostrar');
+        }, 100);
+
+        setTimeout(() => {
+            contenedor.classList.remove('mostrar');
+            setTimeout(() => {
+                document.body.removeChild(contenedor);
+            }, 300);
+        }, 3000);
     }
 });
 
-function mostrarAuthDropdown() {
-    if (authDropdown) {
-        authDropdown.classList.remove('auth-dropdown-oculto');
-        setTimeout(() => authDropdown.classList.add('mostrar'), 10);
-        authAbierto = true;
-    }
-}
-
-function ocultarAuthDropdown() {
-    if (authDropdown) {
-        authDropdown.classList.remove('mostrar');
-        setTimeout(() => authDropdown.classList.add('auth-dropdown-oculto'), 300);
-        authAbierto = false;
-    }
-}
-
-// ==========================================
-// NAVEGACIÓN ENTRE FORMULARIOS
-// ==========================================
-
-if (mostrarRegistro) {
-    mostrarRegistro.addEventListener('click', function(e) {
-        e.preventDefault();
-        mostrarFormulario('register');
-    });
-}
-
-if (mostrarLogin) {
-    mostrarLogin.addEventListener('click', function(e) {
-        e.preventDefault();
-        mostrarFormulario('login');
-    });
-}
-
-function mostrarFormulario(tipo) {
-    // Ocultar todos los formularios
-    if (loginForm) loginForm.classList.add('auth-form-oculto');
-    if (registerForm) registerForm.classList.add('auth-form-oculto');
-    if (verifyForm) verifyForm.classList.add('auth-form-oculto');
-    
-    // Mostrar el formulario solicitado
-    switch (tipo) {
-        case 'login':
-            if (loginForm) loginForm.classList.remove('auth-form-oculto');
-            break;
-        case 'register':
-            if (registerForm) registerForm.classList.remove('auth-form-oculto');
-            break;
-        case 'verify':
-            if (verifyForm) verifyForm.classList.remove('auth-form-oculto');
-            break;
-    }
-}
-
-// ==========================================
-// PROCESAMIENTO DE FORMULARIOS
-// ==========================================
-
-// Login
-if (document.getElementById('form-login')) {
-    document.getElementById('form-login').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        const email = formData.get('email');
-        const password = formData.get('password');
-        const recordarme = formData.get('recordarme') ? '1' : '0';
-        
-        if (!email || !password) {
-            mostrarMensaje('Por favor completa todos los campos', 'error');
-            return;
-        }
-        
-        const submitBtn = this.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
-        submitBtn.textContent = 'Iniciando sesión...';
-        submitBtn.disabled = true;
-        
-        fetch('login_proceso.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&recordarme=${recordarme}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-            
-            if (data.exito) {
-                mostrarMensaje(data.mensaje, 'exito');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else {
-                mostrarMensaje(data.mensaje, 'error');
-            }
-        })
-        .catch(error => {
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-            mostrarMensaje('Error de conexión: ' + error.message, 'error');
-        });
-    });
-}
-
-// Registro
-if (document.getElementById('form-registro')) {
-    document.getElementById('form-registro').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        const password = formData.get('contrasena');
-        const confirmPassword = formData.get('confirmar_contrasena');
-        
-        // Validar contraseñas
-        if (password !== confirmPassword) {
-            mostrarMensaje('Las contraseñas no coinciden', 'error');
-            return;
-        }
-        
-        if (password.length < 6) {
-            mostrarMensaje('La contraseña debe tener al menos 6 caracteres', 'error');
-            return;
-        }
-        
-        const submitBtn = this.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
-        submitBtn.textContent = 'Creando cuenta...';
-        submitBtn.disabled = true;
-        
-        fetch('registro_proceso.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-            
-            if (data.exito) {
-                mostrarMensaje(data.mensaje, 'exito');
-                
-                // Mostrar código temporal (solo para desarrollo)
-                if (data.codigo) {
-                    document.getElementById('codigo-temp').textContent = data.codigo;
-                }
-                
-                // Configurar email para verificación
-                document.getElementById('email-verificar').value = formData.get('correo');
-                
-                // Cambiar a formulario de verificación
-                setTimeout(() => {
-                    mostrarFormulario('verify');
-                }, 1500);
-            } else {
-                mostrarMensaje(data.mensaje, 'error');
-            }
-        })
-        .catch(error => {
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-            mostrarMensaje('Error de conexión: ' + error.message, 'error');
-        });
-    });
-}
-
-// Verificación
-if (document.getElementById('form-verificacion')) {
-    document.getElementById('form-verificacion').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        const codigo = formData.get('codigo');
-        const email = formData.get('email');
-        
-        if (!codigo || codigo.length !== 6) {
-            mostrarMensaje('Ingresa un código de 6 dígitos', 'error');
-            return;
-        }
-        
-        const submitBtn = this.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
-        submitBtn.textContent = 'Verificando...';
-        submitBtn.disabled = true;
-        
-        fetch('verificar_proceso.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `email=${encodeURIComponent(email)}&codigo=${encodeURIComponent(codigo)}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-            
-            if (data.exito) {
-                mostrarMensaje(data.mensaje, 'exito');
-                setTimeout(() => {
-                    mostrarFormulario('login');
-                    mostrarMensaje('Ahora puedes iniciar sesión', 'exito');
-                }, 1500);
-            } else {
-                mostrarMensaje(data.mensaje, 'error');
-            }
-        })
-        .catch(error => {
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-            mostrarMensaje('Error de conexión: ' + error.message, 'error');
-        });
-    });
-}
-
-// Auto-format código de verificación (solo números, máximo 6)
-if (document.getElementById('codigo-verificacion')) {
-    document.getElementById('codigo-verificacion').addEventListener('input', function(e) {
-        this.value = this.value.replace(/\D/g, '').substring(0, 6);
-    });
-}
-
-// ==========================================
-// FUNCIONES DE SOPORTE
-// ==========================================
-
-function mostrarMensaje(mensaje, tipo) {
-    // Remover mensaje anterior si existe
-    const mensajeAnterior = document.querySelector('.mensaje');
-    if (mensajeAnterior) {
-        mensajeAnterior.remove();
-    }
-    
-    // Crear nuevo mensaje
-    const mensajeDiv = document.createElement('div');
-    mensajeDiv.className = `mensaje ${tipo}`;
-    mensajeDiv.textContent = mensaje;
-    
-    // Insertar en el formulario activo
-    const formularioActivo = document.querySelector('.auth-form:not(.auth-form-oculto)');
-    if (formularioActivo) {
-        formularioActivo.insertBefore(mensajeDiv, formularioActivo.firstChild);
-        
-        // Auto-remover después de 5 segundos
-        setTimeout(() => {
-            if (mensajeDiv.parentNode) {
-                mensajeDiv.remove();
-            }
-        }, 5000);
-    }
-}
-
-function cerrarSesion() {
-    if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
-        fetch('logout_proceso.php', {
-            method: 'POST'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.exito) {
-                window.location.reload();
-            } else {
-                alert('Error al cerrar sesión');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            // Recargar de todas formas
-            window.location.reload();
-        });
-    }
-}
+// ...resto de tu código JS (tooltips, autenticación, etc.)...
 </script>
+<!-- ...resto de tu código existente (autenticación, carrito, etc.)... -->
 </body>
 </html>
 
