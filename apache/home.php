@@ -710,6 +710,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .then(data => {
+                        console.error('Vista previa - Error completo:', error);
+
             if (contenedor) {
                 if (data.error) {
                     contenedor.innerHTML = `
