@@ -571,6 +571,11 @@ body {
 .logo .star{
     color: #ffe600;
 }
+
+.header{
+    background-color: #120049;
+}
+
 .header-nav {
     display: flex;
     justify-content: center;

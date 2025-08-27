@@ -264,19 +264,93 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
             <?php else: ?>
                 <!-- Usuario no logueado -->
                 <div class="auth-container">
-                    <a href="#" id="login-toggle" class="auth-link">Iniciar Sesión</a>
+                  <!--  <a href="#" id="login-toggle" class="auth-link">Iniciar Sesión</a> -->
                     
-                    <!-- Dropdown de autenticación -->
+                    
                     <div id="auth-dropdown" class="auth-dropdown-oculto">
-                        <!-- Todo el contenido del formulario de auth permanece igual -->
+                         <!-- Formulario de Login -->
+                    <div id="login-form" class="auth-form">
+                        <h3>Iniciar Sesión</h3>
+                        <form id="form-login">
+                            <div class="form-group">
+                                <input type="email" id="login-email" name="email" placeholder="Correo electrónico" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="password" id="login-password" name="password" placeholder="Contraseña" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="recordarme" name="recordarme">
+                                    <span class="checkmark"></span>
+                                    Recordarme
+                                </label>
+                            </div>
+                            <button type="submit" class="btn-auth">Iniciar Sesión</button>
+                        </form>
+                        <div class="auth-separator">
+                            <span>¿No tienes cuenta?</span>
+                            <a href="#" id="mostrar-registro">Regístrate aquí</a>
+                        </div>
+                    </div>
+
+                    <!-- Formulario de Registro -->
+                    <div id="register-form" class="auth-form auth-form-oculto">
+                        <h3>Crear Cuenta</h3>
+                        <form id="form-registro">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <input type="text" name="nombre" placeholder="Nombre" required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" name="apellido" placeholder="Apellido" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <input type="email" name="correo" placeholder="Correo electrónico" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="text" name="usuario" placeholder="Nombre de usuario" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="tel" name="telefono" placeholder="Teléfono (opcional)">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" name="direccion" placeholder="Dirección (opcional)">
+                            </div>
+                            <div class="form-group">
+                                <input type="password" name="contrasena" placeholder="Contraseña" required minlength="6">
+                            </div>
+                            <div class="form-group">
+                                <input type="password" name="confirmar_contrasena" placeholder="Confirmar contraseña" required minlength="6">
+                            </div>
+                            <button type="submit" class="btn-auth">Crear Cuenta</button>
+                        </form>
+                        <div class="auth-separator">
+                            <span>¿Ya tienes cuenta?</span>
+                            <a href="#" id="mostrar-login">Inicia sesión aquí</a>
+                        </div>
+                    </div>
+
+                    <!-- Formulario de Verificación -->
+                    <div id="verify-form" class="auth-form auth-form-oculto">
+                        <h3>Verificar Email</h3>
+                        <p>Te enviamos un código de 6 dígitos a tu correo.</p>
+                        <p><strong>Código temporal: <span id="codigo-temp"></span></strong></p>
+                        <form id="form-verificacion">
+                            <div class="form-group">
+                                <input type="text" id="codigo-verificacion" name="codigo" placeholder="Código de 6 dígitos" maxlength="6" required>
+                            </div>
+                            <input type="hidden" id="email-verificar" name="email">
+                            <button type="submit" class="btn-auth">Verificar</button>
+                        </form>
+                        <div class="auth-separator">
+                            <a href="#" id="reenviar-codigo">Reenviar código</a>
+                        </div>
+                    </div>
                     </div>
                 </div>
             <?php endif; ?>
         </nav>
-    </div>
-    <div class="search-container">
-        <input type="text" placeholder="¿Qué estás buscando?">
-        <button class="search-button">🔍</button>
     </div>
     <nav class="nav-links">
          <?php if ($usuarioLogueado): ?>
