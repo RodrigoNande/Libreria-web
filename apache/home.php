@@ -178,128 +178,201 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
             <button class="search-button">🔍</button>
         </div>
         
-        <nav class="nav-links">
-            <?php if ($usuarioLogueado): ?>
-                <!-- Usuario logueado -->
-                <div class="usuario-logueado">
-                    <div class="dropdown-usuario">
-                        <a href="#" class="usuario-info">
-                            👤 Hola, <?php echo htmlspecialchars($usuarioActual['Nombre'] ?? ($usuarioActual['usuario'] ?? 'Usuario')); ?>
-                        </a>
-                        <div class="dropdown-usuario-content">
-                            <a href="#">Mi Perfil</a>
-                            <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
+        <!-- REEMPLAZAR la sección <nav class="nav-links"> en home.php con este código -->
+
+<nav class="nav-links">
+    <?php if ($usuarioLogueado): ?>
+        <!-- USUARIO LOGUEADO - Mostrar perfil y carrito -->
+        <div class="usuario-logueado">
+            <div class="dropdown-usuario">
+                <a href="#" class="usuario-info">
+                    👤 Hola, <?php echo htmlspecialchars($usuarioActual['Nombre'] ?? ($usuarioActual['usuario'] ?? 'Usuario')); ?>
+                </a>
+                <div class="dropdown-usuario-content">
+                    <a href="#">Mi Perfil</a>
+                    <a href="#">Mis Pedidos</a>
+                    <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CARRITO (solo visible cuando está logueado) -->
+        <div class="carrito-container">
+            <a href="#" id="carrito-toggle" class="carrito-link">
+                🛒 <span id="contador-carrito"><?php echo $cantidadCarrito; ?></span>
+            </a>
+            <div id="vista-previa-carrito" class="vista-previa-oculta">
+                <div class="carrito-header">
+                    <h3>Mi Carrito</h3>
+                    <span class="cerrar-vista-previa">&times;</span>
+                </div>
+                <div id="productos-vista-previa">
+                    <div class="carrito-loading">
+                        <p>Cargando carrito...</p>
+                    </div>
+                </div>
+                <div class="carrito-footer">
+                    <a href="vercarrito.php" class="btn-ver-carrito">Ver Carrito Completo</a>
+                </div>
+            </div>
+        </div>
+        
+    <?php else: ?>
+        <!-- USUARIO NO LOGUEADO - Solo mostrar iniciar sesión -->
+        <div class="auth-container">
+            <a href="#" id="login-toggle" class="auth-link">Iniciar Sesión</a>
+            
+            <!-- DROPDOWN DE AUTENTICACIÓN -->
+            <div id="auth-dropdown" class="auth-dropdown-oculto">
+                
+                <!-- FORMULARIO DE LOGIN -->
+                <div id="login-form" class="auth-form">
+                    <h3>Iniciar Sesión</h3>
+                    
+                    <form id="form-login" method="post">
+                        <div class="form-group">
+                            <input type="email" 
+                                   id="login-email" 
+                                   name="email" 
+                                   placeholder="Correo electrónico" 
+                                   required
+                                   autocomplete="email">
                         </div>
+                        <div class="form-group">
+                            <input type="password" 
+                                   id="login-password" 
+                                   name="password" 
+                                   placeholder="Contraseña" 
+                                   required
+                                   autocomplete="current-password">
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="recordarme" name="recordarme" value="1">
+                                <span>Recordarme</span>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn-auth">Iniciar Sesión</button>
+                    </form>
+                    
+                    <div class="auth-separator">
+                        <span>¿No tienes cuenta?</span>
+                        <a href="#" id="mostrar-registro">Regístrate aquí</a>
+                    </div>
+                </div>
+
+                <!-- FORMULARIO DE REGISTRO -->
+                <div id="register-form" class="auth-form auth-form-oculto">
+                    <h3>Crear Cuenta</h3>
+                    
+                    <form id="form-registro" method="post">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <input type="text" 
+                                       name="nombre" 
+                                       placeholder="Nombre" 
+                                       required
+                                       autocomplete="given-name">
+                            </div>
+                            <div class="form-group">
+                                <input type="text" 
+                                       name="apellido" 
+                                       placeholder="Apellido" 
+                                       required
+                                       autocomplete="family-name">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" 
+                                   name="correo" 
+                                   placeholder="Correo electrónico" 
+                                   required
+                                   autocomplete="email">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" 
+                                   name="usuario" 
+                                   placeholder="Nombre de usuario" 
+                                   required
+                                   autocomplete="username">
+                        </div>
+                        <div class="form-group">
+                            <input type="tel" 
+                                   name="telefono" 
+                                   placeholder="Teléfono (opcional)"
+                                   autocomplete="tel">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" 
+                                   name="direccion" 
+                                   placeholder="Dirección (opcional)"
+                                   autocomplete="street-address">
+                        </div>
+                        <div class="form-group">
+                            <input type="password" 
+                                   name="contrasena" 
+                                   placeholder="Contraseña" 
+                                   required 
+                                   minlength="6"
+                                   autocomplete="new-password">
+                        </div>
+                        <div class="form-group">
+                            <input type="password" 
+                                   name="confirmar_contrasena" 
+                                   placeholder="Confirmar contraseña" 
+                                   required 
+                                   minlength="6"
+                                   autocomplete="new-password">
+                        </div>
+                        <button type="submit" class="btn-auth">Crear Cuenta</button>
+                    </form>
+                    
+                    <div class="auth-separator">
+                        <span>¿Ya tienes cuenta?</span>
+                        <a href="#" id="mostrar-login">Inicia sesión aquí</a>
+                    </div>
+                </div>
+
+                <!-- FORMULARIO DE VERIFICACIÓN -->
+                <div id="verify-form" class="auth-form auth-form-oculto">
+                    <h3>Verificar Email</h3>
+                    <p>Te enviamos un código de 6 dígitos a tu correo electrónico.</p>
+                    <p><strong>Código temporal para desarrollo: <span id="codigo-temp">------</span></strong></p>
+                    
+                    <form id="form-verificacion" method="post">
+                        <div class="form-group">
+                            <input type="text" 
+                                   id="codigo-verificacion" 
+                                   name="codigo" 
+                                   placeholder="Código de 6 dígitos" 
+                                   maxlength="6" 
+                                   required
+                                   pattern="[0-9]{6}"
+                                   autocomplete="one-time-code">
+                        </div>
+                        <input type="hidden" id="email-verificar" name="email">
+                        <button type="submit" class="btn-auth">Verificar</button>
+                    </form>
+                    
+                    <div class="auth-separator">
+                        <a href="#" id="reenviar-codigo">¿No recibiste el código? Reenviar</a>
                     </div>
                 </div>
                 
-                <!-- Carrito -->
-                <div class="carrito-container">
-                    <a href="#" id="carrito-toggle" class="carrito-link">
-                        🛒 <span id="contador-carrito"><?php echo $cantidadCarrito; ?></span>
-                    </a>
-                    <div id="vista-previa-carrito" class="vista-previa-oculta">
-                        <div class="carrito-header">
-                            <h3>Mi Carrito</h3>
-                            <span class="cerrar-vista-previa">&times;</span>
-                        </div>
-                        <div id="productos-vista-previa">
-                            <!-- Contenido cargado dinámicamente -->
-                        </div>
-                        <div class="carrito-footer">
-                            <a href="vercarrito.php" class="btn-ver-carrito">Ver Carrito Completo</a>
-                        </div>
-                    </div>
-                </div>
-            <?php else: ?>
-                <!-- Usuario NO logueado - Sistema simplificado -->
-                <div class="auth-container">
-                    <a href="#" id="login-toggle" class="auth-link">Iniciar Sesión</a>
-                    
-                    <div id="auth-dropdown" class="auth-dropdown-oculto">
-                        <!-- Formulario de Login -->
-                        <div id="login-form" class="auth-form">
-                            <h3>Iniciar Sesión</h3>
-                            <form id="form-login">
-                                <div class="form-group">
-                                    <input type="email" id="login-email" name="email" placeholder="Correo electrónico" required>
-                                </div>
-                                <div class="form-group">
-                                    <input type="password" id="login-password" name="password" placeholder="Contraseña" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="checkbox-container">
-                                        <input type="checkbox" id="recordarme" name="recordarme">
-                                        <span class="checkmark"></span>
-                                        Recordarme
-                                    </label>
-                                </div>
-                                <button type="submit" class="btn-auth">Iniciar Sesión</button>
-                            </form>
-                            <div class="auth-separator">
-                                <span>¿No tienes cuenta?</span>
-                                <a href="#" id="mostrar-registro">Regístrate aquí</a>
-                            </div>
-                        </div>
-
-                        <!-- Formulario de Registro -->
-                        <div id="register-form" class="auth-form auth-form-oculto">
-                            <h3>Crear Cuenta</h3>
-                            <form id="form-registro">
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <input type="text" name="nombre" placeholder="Nombre" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <input type="text" name="apellido" placeholder="Apellido" required>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <input type="email" name="correo" placeholder="Correo electrónico" required>
-                                </div>
-                                <div class="form-group">
-                                    <input type="text" name="usuario" placeholder="Nombre de usuario" required>
-                                </div>
-                                <div class="form-group">
-                                    <input type="tel" name="telefono" placeholder="Teléfono (opcional)">
-                                </div>
-                                <div class="form-group">
-                                    <input type="text" name="direccion" placeholder="Dirección (opcional)">
-                                </div>
-                                <div class="form-group">
-                                    <input type="password" name="contrasena" placeholder="Contraseña" required minlength="6">
-                                </div>
-                                <div class="form-group">
-                                    <input type="password" name="confirmar_contrasena" placeholder="Confirmar contraseña" required minlength="6">
-                                </div>
-                                <button type="submit" class="btn-auth">Crear Cuenta</button>
-                            </form>
-                            <div class="auth-separator">
-                                <span>¿Ya tienes cuenta?</span>
-                                <a href="#" id="mostrar-login">Inicia sesión aquí</a>
-                            </div>
-                        </div>
-
-                        <!-- Formulario de Verificación -->
-                        <div id="verify-form" class="auth-form auth-form-oculto">
-                            <h3>Verificar Email</h3>
-                            <p>Te enviamos un código de 6 dígitos a tu correo.</p>
-                            <p><strong>Código temporal: <span id="codigo-temp"></span></strong></p>
-                            <form id="form-verificacion">
-                                <div class="form-group">
-                                    <input type="text" id="codigo-verificacion" name="codigo" placeholder="Código de 6 dígitos" maxlength="6" required>
-                                </div>
-                                <input type="hidden" id="email-verificar" name="email">
-                                <button type="submit" class="btn-auth">Verificar</button>
-                            </form>
-                            <div class="auth-separator">
-                                <a href="#" id="reenviar-codigo">Reenviar código</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            <?php endif; ?>
-        </nav>
+            </div>
+        </div>
+        
+        <!-- CARRITO PARA INVITADOS (opcional - puedes comentar esta sección si no quieres carrito para invitados) -->
+        <!-- 
+        <div class="carrito-container">
+            <a href="#" id="carrito-toggle-invitado" class="carrito-link">
+                🛒 <span id="contador-carrito-invitado">0</span>
+            </a>
+        </div>
+        -->
+        
+    <?php endif; ?>
+</nav>
     </div>
 </header>
 
@@ -425,192 +498,190 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
         </div>
     </div>
 </div>
- 
-<script>
-// Pantalla de carga
-window.addEventListener('load', function() {
-    const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen) {
-        setTimeout(() => {
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-            }, 500);
-        }, 1000);
-    }
-});
+ <script>
+// ===================================================
+// SISTEMA DE AUTENTICACIÓN CORREGIDO Y MEJORADO
+// ===================================================
 
-// Mejorar el contador del carrito
-function actualizarContadorCarrito(cantidad) {
-    const contadorCarrito = document.getElementById('contador-carrito');
-    if (contadorCarrito) {
-        contadorCarrito.textContent = cantidad;
-        contadorCarrito.style.animation = 'none';
-        setTimeout(() => {
-            contadorCarrito.style.animation = 'bounceIn 0.5s ease-out';
-        }, 10);
-    }
-}
-
-// ==========================
-// VISTA PREVIA DEL CARRITO Y AGREGAR AL CARRITO MEJORADO
-// ==========================
 document.addEventListener('DOMContentLoaded', function() {
-    // Variables para vista previa del carrito
-    const carritoToggle = document.getElementById('carrito-toggle');
-    const vistaPrevia = document.getElementById('vista-previa-carrito');
-    const cerrarVistaPrevia = document.querySelector('.cerrar-vista-previa');
-    let vistaAbbierta = false;
-
-    // Funcionalidad de vista previa del carrito
-    if (carritoToggle) {
-        carritoToggle.addEventListener('click', function(e) {
+    
+    // === ELEMENTOS DEL DOM ===
+    const loginToggle = document.getElementById('login-toggle');
+    const authDropdown = document.getElementById('auth-dropdown');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const verifyForm = document.getElementById('verify-form');
+    const formLogin = document.getElementById('form-login');
+    const formRegistro = document.getElementById('form-registro');
+    const formVerificacion = document.getElementById('form-verificacion');
+    const mostrarRegistro = document.getElementById('mostrar-registro');
+    const mostrarLogin = document.getElementById('mostrar-login');
+    
+    let authOverlay = null;
+    let dropdownAbierto = false;
+    
+    // === FUNCIONES DE UTILIDAD ===
+    function crearOverlay() {
+        if (!authOverlay) {
+            authOverlay = document.createElement('div');
+            authOverlay.className = 'auth-overlay';
+            authOverlay.addEventListener('click', cerrarDropdown);
+            document.body.appendChild(authOverlay);
+        }
+        return authOverlay;
+    }
+    
+    function abrirDropdown() {
+        if (authDropdown && !dropdownAbierto) {
+            authDropdown.classList.remove('auth-dropdown-oculto');
+            setTimeout(() => {
+                authDropdown.classList.add('mostrar');
+            }, 10);
+            
+            const overlay = crearOverlay();
+            overlay.classList.add('activo');
+            dropdownAbierto = true;
+        }
+    }
+    
+    function cerrarDropdown() {
+        if (authDropdown && dropdownAbierto) {
+            authDropdown.classList.remove('mostrar');
+            setTimeout(() => {
+                authDropdown.classList.add('auth-dropdown-oculto');
+            }, 300);
+            
+            if (authOverlay) {
+                authOverlay.classList.remove('activo');
+            }
+            dropdownAbierto = false;
+        }
+    }
+    
+    function mostrarFormulario(formularioMostrar) {
+        // Ocultar todos los formularios
+        const formularios = [loginForm, registerForm, verifyForm];
+        formularios.forEach(form => {
+            if (form) form.classList.add('auth-form-oculto');
+        });
+        
+        // Mostrar el formulario solicitado
+        if (formularioMostrar) {
+            formularioMostrar.classList.remove('auth-form-oculto');
+        }
+    }
+    
+    function mostrarMensaje(mensaje, tipo = 'info', duracion = 5000) {
+        // Remover mensajes anteriores
+        const mensajesAnteriores = document.querySelectorAll('.mensaje-temporal');
+        mensajesAnteriores.forEach(msg => msg.remove());
+        
+        // Crear nuevo mensaje
+        const contenedor = document.createElement('div');
+        contenedor.className = `mensaje mensaje-temporal ${tipo}`;
+        contenedor.innerHTML = `
+            <span>${mensaje}</span>
+            <button type="button" style="float: right; background: none; border: none; color: inherit; cursor: pointer; font-weight: bold; margin-left: 10px;">&times;</button>
+        `;
+        
+        // Agregar al dropdown
+        if (authDropdown) {
+            const formularioActivo = authDropdown.querySelector('.auth-form:not(.auth-form-oculto)');
+            if (formularioActivo) {
+                formularioActivo.insertBefore(contenedor, formularioActivo.firstChild);
+            }
+        }
+        
+        // Funcionalidad del botón cerrar
+        const btnCerrar = contenedor.querySelector('button');
+        btnCerrar.addEventListener('click', () => contenedor.remove());
+        
+        // Auto-eliminar después del tiempo especificado
+        setTimeout(() => {
+            if (contenedor.parentNode) {
+                contenedor.remove();
+            }
+        }, duracion);
+    }
+    
+    function deshabilitarBoton(boton, texto = 'Procesando...') {
+        if (boton) {
+            boton.disabled = true;
+            boton.classList.add('cargando');
+            boton.dataset.textoOriginal = boton.textContent;
+            boton.textContent = texto;
+        }
+    }
+    
+    function habilitarBoton(boton) {
+        if (boton) {
+            boton.disabled = false;
+            boton.classList.remove('cargando');
+            if (boton.dataset.textoOriginal) {
+                boton.textContent = boton.dataset.textoOriginal;
+            }
+        }
+    }
+    
+    // === EVENT LISTENERS ===
+    
+    // Toggle del dropdown de autenticación
+    if (loginToggle) {
+        loginToggle.addEventListener('click', function(e) {
             e.preventDefault();
-            if (!vistaAbbierta) {
-                cargarVistaPrevia();
-                mostrarVistaPrevia();
+            e.stopPropagation();
+            
+            if (dropdownAbierto) {
+                cerrarDropdown();
             } else {
-                ocultarVistaPrevia();
+                abrirDropdown();
+                mostrarFormulario(loginForm);
             }
         });
     }
-
-    if (cerrarVistaPrevia) {
-        cerrarVistaPrevia.addEventListener('click', ocultarVistaPrevia);
-    }
-
-    // Cerrar vista previa al hacer clic fuera
-    document.addEventListener('click', function(e) {
-        if (vistaAbbierta && !e.target.closest('.carrito-container')) {
-            ocultarVistaPrevia();
-        }
-    });
-
-    function mostrarVistaPrevia() {
-        if (vistaPrevia) {
-            vistaPrevia.classList.remove('vista-previa-oculta');
-            setTimeout(() => vistaPrevia.classList.add('mostrar'), 10);
-            vistaAbbierta = true;
-        }
-    }
-
-    function ocultarVistaPrevia() {
-        if (vistaPrevia) {
-            vistaPrevia.classList.remove('mostrar');
-            setTimeout(() => vistaPrevia.classList.add('vista-previa-oculta'), 300);
-            vistaAbbierta = false;
-        }
-    }
-
-    function cargarVistaPrevia() {
-        const contenedor = document.getElementById('productos-vista-previa');
-        // Mostrar loading
-        if (contenedor) {
-            contenedor.innerHTML = `
-                <div class="carrito-loading">
-                    <p>Cargando carrito...</p>
-                </div>
-            `;
-        }
-
-        fetch('vistapreviacarrito.php', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.text();
-        })
-        .then(text => {
-            try {
-                return JSON.parse(text);
-            } catch (e) {
-                throw new Error(`Error parsing JSON: ${e.message}. Response: ${text.substring(0, 200)}`);
-            }
-        })
-        .then(data => {
-                        console.error('Vista previa - Error completo:', error);
-
-            if (contenedor) {
-                if (data.error) {
-                    contenedor.innerHTML = `
-                        <div class="carrito-error">
-                            <p>Error: ${data.mensaje}</p>
-                            <small>Revisa la consola para más detalles</small>
-                        </div>
-                    `;
-                    return;
-                }
-                if (data.productos && data.productos.length > 0) {
-                    let html = '';
-                    data.productos.forEach(producto => {
-                        html += `
-                            <div class="producto-preview">
-                                <img src="${producto.imagen}" alt="${producto.nombre}" onerror="this.src='img/no-image.png'">
-                                <div class="producto-info">
-                                    <h4>${producto.nombre}</h4>
-                                    <p>Cantidad: ${producto.cantidad} - $${parseFloat(producto.precio).toFixed(2)}</p>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    html += `
-                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                            <strong>Total: $${parseFloat(data.total).toFixed(2)}</strong>
-                        </div>
-                    `;
-                    contenedor.innerHTML = html;
-                } else {
-                    contenedor.innerHTML = `
-                        <div class="carrito-vacio">
-                            <p>Tu carrito está vacío</p>
-                            <small>¡Agrega algunos productos!</small>
-                        </div>
-                    `;
-                }
-            }
-        })
-        .catch(error => {
-            if (contenedor) {
-                contenedor.innerHTML = `
-                    <div class="carrito-error">
-                        <p>Error al cargar el carrito</p>
-                        <small>${error.message}</small>
-                        <br><small>Revisa la consola para más detalles</small>
-                    </div>
-                `;
-            }
-        });
-    }
-
-    // Funcionalidad de agregar al carrito (mejorada)
-    const botonesAgregar = document.querySelectorAll('.btn-agregar-carrito');
-    botonesAgregar.forEach(boton => {
-        boton.addEventListener('click', function(e) {
+    
+    // Cambiar entre formularios
+    if (mostrarRegistro) {
+        mostrarRegistro.addEventListener('click', function(e) {
             e.preventDefault();
-            const productoId = this.getAttribute('data-id');
-            const productoNombre = this.getAttribute('data-nombre');
-            const productoPrecio = this.getAttribute('data-precio');
-            if (!productoId || !productoNombre || !productoPrecio) {
-                alert('Error: Datos del producto incompletos');
+            mostrarFormulario(registerForm);
+        });
+    }
+    
+    if (mostrarLogin) {
+        mostrarLogin.addEventListener('click', function(e) {
+            e.preventDefault();
+            mostrarFormulario(loginForm);
+        });
+    }
+    
+    // === MANEJO DEL FORMULARIO DE LOGIN ===
+    if (formLogin) {
+        formLogin.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            // Validación básica
+            const email = formData.get('email');
+            const password = formData.get('password');
+            
+            if (!email || !password) {
+                mostrarMensaje('Por favor, completa todos los campos', 'error');
                 return;
             }
-            const botonOriginal = this.innerHTML;
-            this.innerHTML = 'Agregando...';
-            this.classList.add('agregando');
-            this.disabled = true;
-
-            fetch('carrito_ajax.php', {
+            
+            if (!email.includes('@')) {
+                mostrarMensaje('Por favor, ingresa un email válido', 'error');
+                return;
+            }
+            
+            deshabilitarBoton(submitBtn, 'Iniciando sesión...');
+            
+            fetch('login_proceso.php', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `id=${encodeURIComponent(productoId)}&accion=agregar`
+                body: formData
             })
             .then(response => {
                 if (!response.ok) {
@@ -619,184 +690,185 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.text();
             })
             .then(text => {
+                let data;
                 try {
-                    return JSON.parse(text);
+                    data = JSON.parse(text);
                 } catch (e) {
-                    throw new Error(`Error parsing JSON: ${e.message}. Response: ${text.substring(0, 200)}`);
+                    console.error('Error parsing JSON:', e);
+                    console.error('Response text:', text);
+                    throw new Error('Error en la respuesta del servidor');
                 }
-            })
-            .then(data => {
-                // Restaurar botón
-                this.innerHTML = botonOriginal;
-                this.classList.remove('agregando');
-                this.disabled = false;
-
+                
                 if (data.exito) {
-                    // Actualizar contador
-                    actualizarContadorCarrito(data.cantidad_total);
-                    // Mostrar confirmación visual
-                    this.style.background = '#26d45c';
-                    this.innerHTML = '¡Agregado!';
+                    mostrarMensaje('¡Inicio de sesión exitoso! Recargando página...', 'exito');
                     setTimeout(() => {
-                        this.style.background = '';
-                        this.innerHTML = botonOriginal;
+                        window.location.reload();
                     }, 1500);
-                    // Mostrar notificación simple
-                    mostrarNotificacion(`${productoNombre} agregado al carrito`);
-                } else {
-                    alert('Error: ' + (data.mensaje || 'Error desconocido'));
-                }
-            })
-            .catch(error => {
-                // Restaurar botón
-                this.innerHTML = botonOriginal;
-                this.classList.remove('agregando');
-                this.disabled = false;
-                alert('Error de conexión: ' + error.message + '\nRevisa la consola para más detalles.');
-            });
-        });
-    });
-
-    // Función para mostrar notificación simple
-    function mostrarNotificacion(mensaje) {
-        // Crear notificación temporal
-        const notificacion = document.createElement('div');
-        notificacion.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #26d45c;
-            color: white;
-            padding: 15px 20px;
-            border-radius: 5px;
-            z-index: 10000;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-        `;
-        notificacion.textContent = mensaje;
-        document.body.appendChild(notificacion);
-        // Animar entrada
-        setTimeout(() => {
-            notificacion.style.transform = 'translateX(0)';
-        }, 100);
-        // Remover después de 3 segundos
-        setTimeout(() => {
-            notificacion.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                if (notificacion.parentNode) {
-                    notificacion.parentNode.removeChild(notificacion);
-                }
-            }, 300);
-        }, 3000);
-    }
-
-    // Cerrar vista previa con Escape
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && vistaAbbierta) {
-            ocultarVistaPrevia();
-        }
-    });
-
-    // Efectos hover en productos (opcional)
-    const productos = document.querySelectorAll('.producto');
-    productos.forEach(producto => {
-        producto.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-5px)';
-            this.style.transition = 'transform 0.3s ease';
-        });
-        producto.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-        });
-    });
-});
-
-// Mejorar el sistema de autenticación (login.php)
-document.addEventListener('DOMContentLoaded', function() {
-    const formularioLogin = document.getElementById('formulario-login');
-    const loginToggle = document.getElementById('login-toggle');
-    const authDropdown = document.getElementById('auth-dropdown');
-
-    if (loginToggle) {
-        loginToggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (authDropdown.classList.contains('auth-dropdown-oculto')) {
-                authDropdown.classList.remove('auth-dropdown-oculto');
-                authDropdown.classList.add('auth-dropdown-visible');
-                setTimeout(() => {
-                    authDropdown.classList.add('mostrar');
-                }, 10);
-            } else {
-                authDropdown.classList.remove('mostrar');
-                setTimeout(() => {
-                    authDropdown.classList.add('auth-dropdown-oculto');
-                }, 300);
-            }
-        });
-    }
-
-    // Cerrar dropdown al hacer clic fuera
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.auth-container')) {
-            authDropdown.classList.remove('mostrar');
-            setTimeout(() => {
-                authDropdown.classList.add('auth-dropdown-oculto');
-            }, 300);
-        }
-    });
-
-    // Manejo del formulario de login
-    if (formularioLogin) {
-        formularioLogin.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(formularioLogin);
-            const datos = Object.fromEntries(formData);
-
-            // Validación simple
-            if (!datos.usuario || !datos.password) {
-                return mostrarMensaje('Por favor, completa todos los campos', 'error');
-            }
-
-            // Enviar datos por AJAX
-            fetch('login.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.exito) {
-                    // Login exitoso
-                    location.reload();
                 } else {
                     mostrarMensaje(data.mensaje || 'Error desconocido', 'error');
+                    habilitarBoton(submitBtn);
                 }
             })
             .catch(error => {
                 console.error('Error en el login:', error);
-                mostrarMensaje('Error de conexión. Inténtalo de nuevo más tarde.', 'error');
+                mostrarMensaje('Error de conexión. Inténtalo de nuevo.', 'error');
+                habilitarBoton(submitBtn);
             });
         });
     }
-
-    function mostrarMensaje(mensaje, tipo) {
-        const contenedor = document.createElement('div');
-        contenedor.className = `mensaje ${tipo}`;
-        contenedor.textContent = mensaje;
-        document.body.appendChild(contenedor);
-
-        setTimeout(() => {
-            contenedor.classList.add('mostrar');
-        }, 100);
-
-        setTimeout(() => {
-            contenedor.classList.remove('mostrar');
-            setTimeout(() => {
-                document.body.removeChild(contenedor);
-            }, 300);
-        }, 3000);
+    
+    // === MANEJO DEL FORMULARIO DE REGISTRO ===
+    if (formRegistro) {
+        formRegistro.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            // Validaciones
+            const datos = Object.fromEntries(formData);
+            
+            if (!datos.nombre || !datos.apellido || !datos.correo || !datos.usuario || !datos.contrasena) {
+                mostrarMensaje('Por favor, completa todos los campos obligatorios', 'error');
+                return;
+            }
+            
+            if (!datos.correo.includes('@')) {
+                mostrarMensaje('Por favor, ingresa un email válido', 'error');
+                return;
+            }
+            
+            if (datos.contrasena.length < 6) {
+                mostrarMensaje('La contraseña debe tener al menos 6 caracteres', 'error');
+                return;
+            }
+            
+            if (datos.contrasena !== datos.confirmar_contrasena) {
+                mostrarMensaje('Las contraseñas no coinciden', 'error');
+                return;
+            }
+            
+            deshabilitarBoton(submitBtn, 'Creando cuenta...');
+            
+            fetch('registro_proceso.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(text => {
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('Error parsing JSON:', e);
+                    console.error('Response text:', text);
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                
+                if (data.exito) {
+                    // Mostrar código temporal si está disponible
+                    if (data.codigo) {
+                        const codigoTemp = document.getElementById('codigo-temp');
+                        if (codigoTemp) {
+                            codigoTemp.textContent = data.codigo;
+                        }
+                    }
+                    
+                    // Configurar email para verificación
+                    const emailVerificar = document.getElementById('email-verificar');
+                    if (emailVerificar) {
+                        emailVerificar.value = datos.correo;
+                    }
+                    
+                    mostrarMensaje('¡Cuenta creada! Ahora verifica tu email.', 'exito');
+                    setTimeout(() => {
+                        mostrarFormulario(verifyForm);
+                    }, 2000);
+                } else {
+                    mostrarMensaje(data.mensaje || 'Error desconocido', 'error');
+                    habilitarBoton(submitBtn);
+                }
+            })
+            .catch(error => {
+                console.error('Error en el registro:', error);
+                mostrarMensaje('Error de conexión. Inténtalo de nuevo.', 'error');
+                habilitarBoton(submitBtn);
+            });
+        });
+    }
+    
+    // === MANEJO DEL FORMULARIO DE VERIFICACIÓN ===
+    if (formVerificacion) {
+        formVerificacion.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            const codigo = formData.get('codigo');
+            const email = formData.get('email');
+            
+            if (!codigo || !email) {
+                mostrarMensaje('Código y email son requeridos', 'error');
+                return;
+            }
+            
+            if (codigo.length !== 6 || !/^\d{6}$/.test(codigo)) {
+                mostrarMensaje('El código debe tener 6 dígitos', 'error');
+                return;
+            }
+            
+            deshabilitarBoton(submitBtn, 'Verificando...');
+            
+            fetch('verificar_proceso.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(text => {
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('Error parsing JSON:', e);
+                    console.error('Response text:', text);
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                
+                if (data.exito) {
+                    mostrarMensaje('¡Email verificado correctamente! Ya puedes iniciar sesión.', 'exito');
+                    setTimeout(() => {
+                        mostrarFormulario(loginForm);
+                    }, 2000);
+                } else {
+                    mostrarMensaje(data.mensaje || 'Código inválido', 'error');
+                    habilitarBoton(submitBtn);
+                }
+            })
+            .catch(error => {
+                console.error('Error en la verificación:', error);
+                mostrarMensaje('Error de conexión. Inténtalo de nuevo.', 'error');
+                habilitarBoton(submitBtn);
+            });
+        });
+    }
+    
+    // === CERRAR DROPDOWN CON ESCAPE ===
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && dropdownAbierto) {
+            cerrarDropdown();
+        }
+    });
+    
+    // === PREVENIR CIERRE AL HACER CLIC DENTRO DEL DROPDOWN ===
+    if (authDropdown) {
+        authDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
     }
 });
 
+// === FUNCIÓN PARA CERRAR SESIÓN (GLOBAL) ===
 function cerrarSesion() {
     if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
         fetch('logout_proceso.php', {
@@ -804,26 +876,22 @@ function cerrarSesion() {
             headers: {
                 'Content-Type': 'application/json',
             }
-                })
+        })
         .then(response => response.json())
         .then(data => {
             if (data.exito) {
                 window.location.reload();
-                    } else {
+            } else {
                 alert('Error al cerrar sesión: ' + data.mensaje);
-                      }
-                          })
+            }
+        })
         .catch(error => {
             console.error('Error:', error);
-            // Intentar cerrar sesión de forma manual
+            // Intentar cerrar sesión de forma manual como fallback
             window.location.href = 'logout_proceso.php';
-                             });
-                                   }
-                                      }
-    </script>
-<!-- ...resto de tu código existente (autenticación, carrito, etc.)... -->
+        });
+    }
+}
+</script>
 </body>
 </html>
-
-
-
