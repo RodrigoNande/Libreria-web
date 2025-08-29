@@ -182,7 +182,7 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
 
 <nav class="nav-links">
     <?php if ($usuarioLogueado): ?>
-        <!-- USUARIO LOGUEADO - Mostrar perfil y carrito -->
+        <!-- USUARIO LOGUEADO -->
         <div class="usuario-logueado">
             <div class="dropdown-usuario">
                 <a href="#" class="usuario-info">
@@ -196,7 +196,7 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
             </div>
         </div>
         
-        <!-- CARRITO (solo visible cuando está logueado) -->
+        <!-- CARRITO -->
         <div class="carrito-container">
             <a href="#" id="carrito-toggle" class="carrito-link">
                 🛒 <span id="contador-carrito"><?php echo $cantidadCarrito; ?></span>
@@ -218,13 +218,12 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
         </div>
         
     <?php else: ?>
-        <!-- USUARIO NO LOGUEADO - Solo mostrar iniciar sesión -->
+        <!-- USUARIO NO LOGUEADO -->
         <div class="auth-container">
             <a href="#" id="login-toggle" class="auth-link">Iniciar Sesión</a>
             
             <!-- DROPDOWN DE AUTENTICACIÓN -->
             <div id="auth-dropdown" class="auth-dropdown-oculto">
-                
                 <!-- FORMULARIO DE LOGIN -->
                 <div id="login-form" class="auth-form">
                     <h3>Iniciar Sesión</h3>
@@ -479,33 +478,18 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
     <a href="#" aria-label="Siguiente página">›</a>
 </nav>
 
-<!-- Modal mejorado para confirmación -->
-<div class="modal-overlay" id="modal-confirmacion" role="dialog" aria-labelledby="modal-title" aria-modal="true">
-    <div class="modal">
-        <div class="modal-header">
-            <h3 id="modal-title" class="modal-title">¡Producto agregado!</h3>
-            <button class="modal-close" aria-label="Cerrar modal">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <div style="font-size: 48px; color: var(--success-color);">✅</div>
-            </div>
-            <p id="mensaje-producto" style="text-align: center;"></p>
-        </div>
-        <div class="modal-footer">
-            <button id="continuar-comprando" class="btn-secondary">Continuar Comprando</button>
-            <a href="vercarrito.php" class="btn-primary">Ver Carrito</a>
-        </div>
-    </div>
-</div>
- <script>
+<!-- Contenedor para notificaciones flotantes -->
+<div id="notificaciones-container" style="position: fixed; top: 20px; right: 20px; z-index: 10000; pointer-events: none;"></div>
+
+<script>
 // ===================================================
-// SISTEMA DE AUTENTICACIÓN CORREGIDO Y MEJORADO
+// SISTEMA DE AUTENTICACIÓN Y CARRITO MEJORADO
 // ===================================================
 
 document.addEventListener('DOMContentLoaded', function() {
     
     // === ELEMENTOS DEL DOM ===
+    // Autenticación
     const loginToggle = document.getElementById('login-toggle');
     const authDropdown = document.getElementById('auth-dropdown');
     const loginForm = document.getElementById('login-form');
@@ -517,14 +501,39 @@ document.addEventListener('DOMContentLoaded', function() {
     const mostrarRegistro = document.getElementById('mostrar-registro');
     const mostrarLogin = document.getElementById('mostrar-login');
     
+    // Carrito
+    const botonesAgregar = document.querySelectorAll('.btn-agregar-carrito');
+    const contadorCarrito = document.getElementById('contador-carrito');
+    const carritoToggle = document.getElementById('carrito-toggle');
+    const vistaPrevia = document.getElementById('vista-previa-carrito');
+    const cerrarVistaPrevia = document.querySelector('.cerrar-vista-previa');
+    const productosVistaPrevia = document.getElementById('productos-vista-previa');
+    
     let authOverlay = null;
     let dropdownAbierto = false;
+    let carritoAbierto = false;
+    let carritoOverlay = null;
     
-    // === FUNCIONES DE UTILIDAD ===
-    function crearOverlay() {
+    // ===================================================
+    // SISTEMA DE AUTENTICACIÓN (MEJORADO)
+    // ===================================================
+    
+    function crearAuthOverlay() {
         if (!authOverlay) {
             authOverlay = document.createElement('div');
             authOverlay.className = 'auth-overlay';
+            authOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.3);
+                z-index: 999;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+            `;
             authOverlay.addEventListener('click', cerrarDropdown);
             document.body.appendChild(authOverlay);
         }
@@ -538,8 +547,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 authDropdown.classList.add('mostrar');
             }, 10);
             
-            const overlay = crearOverlay();
-            overlay.classList.add('activo');
+            const overlay = crearAuthOverlay();
+            overlay.style.opacity = '1';
+            overlay.style.visibility = 'visible';
             dropdownAbierto = true;
         }
     }
@@ -552,58 +562,136 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
             
             if (authOverlay) {
-                authOverlay.classList.remove('activo');
+                authOverlay.style.opacity = '0';
+                authOverlay.style.visibility = 'hidden';
             }
             dropdownAbierto = false;
         }
     }
     
     function mostrarFormulario(formularioMostrar) {
-        // Ocultar todos los formularios
         const formularios = [loginForm, registerForm, verifyForm];
         formularios.forEach(form => {
             if (form) form.classList.add('auth-form-oculto');
         });
         
-        // Mostrar el formulario solicitado
         if (formularioMostrar) {
             formularioMostrar.classList.remove('auth-form-oculto');
         }
     }
     
-    function mostrarMensaje(mensaje, tipo = 'info', duracion = 5000) {
-        // Remover mensajes anteriores
-        const mensajesAnteriores = document.querySelectorAll('.mensaje-temporal');
-        mensajesAnteriores.forEach(msg => msg.remove());
+    // FUNCIÓN DE NOTIFICACIONES MEJORADA (reemplaza la anterior)
+    function mostrarNotificacion(mensaje, tipo = 'exito', duracion = 4000) {
+        const contenedor = document.getElementById('notificaciones-container');
+        if (!contenedor) return;
         
-        // Crear nuevo mensaje
-        const contenedor = document.createElement('div');
-        contenedor.className = `mensaje mensaje-temporal ${tipo}`;
-        contenedor.innerHTML = `
-            <span>${mensaje}</span>
-            <button type="button" style="float: right; background: none; border: none; color: inherit; cursor: pointer; font-weight: bold; margin-left: 10px;">&times;</button>
+        // Crear notificación
+        const notif = document.createElement('div');
+        notif.className = `notificacion-flotante ${tipo}`;
+        notif.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            border-left: 4px solid ${tipo === 'exito' ? '#2ed573' : tipo === 'error' ? '#ff4757' : '#4834d4'};
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            pointer-events: auto;
+            max-width: 350px;
+            position: relative;
+            overflow: hidden;
         `;
         
-        // Agregar al dropdown
-        if (authDropdown) {
-            const formularioActivo = authDropdown.querySelector('.auth-form:not(.auth-form-oculto)');
-            if (formularioActivo) {
-                formularioActivo.insertBefore(contenedor, formularioActivo.firstChild);
-            }
-        }
+        // Icono según tipo
+        let icono = '✅';
+        if (tipo === 'error') icono = '❌';
+        else if (tipo === 'info') icono = 'ℹ️';
+        else if (tipo === 'warning') icono = '⚠️';
         
-        // Funcionalidad del botón cerrar
-        const btnCerrar = contenedor.querySelector('button');
-        btnCerrar.addEventListener('click', () => contenedor.remove());
+        notif.innerHTML = `
+            <div class="notif-icono" style="font-size: 24px; flex-shrink: 0;">${icono}</div>
+            <div class="notif-contenido" style="flex: 1; min-width: 0;">
+                <div class="notif-mensaje" style="font-weight: 500; color: #333; margin-bottom: 2px;">${mensaje}</div>
+                <div class="notif-tiempo" style="font-size: 12px; color: #666;">Ahora</div>
+            </div>
+            <button class="notif-cerrar" style="
+                background: none;
+                border: none;
+                font-size: 18px;
+                cursor: pointer;
+                color: #999;
+                padding: 0;
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                transition: all 0.2s ease;
+                flex-shrink: 0;
+            ">&times;</button>
+            <div class="notif-progreso" style="
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                height: 3px;
+                background: ${tipo === 'exito' ? '#2ed573' : tipo === 'error' ? '#ff4757' : '#4834d4'};
+                width: 100%;
+                transform-origin: left;
+                animation: progreso ${duracion}ms linear forwards;
+            "></div>
+        `;
         
-        // Auto-eliminar después del tiempo especificado
+        // Agregar al contenedor
+        contenedor.appendChild(notif);
+        
+        // Animación de entrada
         setTimeout(() => {
-            if (contenedor.parentNode) {
-                contenedor.remove();
+            notif.style.transform = 'translateX(0)';
+            notif.style.opacity = '1';
+        }, 100);
+        
+        // Botón de cerrar
+        const btnCerrar = notif.querySelector('.notif-cerrar');
+        btnCerrar.addEventListener('click', () => {
+            cerrarNotificacion(notif);
+        });
+        
+        // Hover para pausar progreso
+        notif.addEventListener('mouseenter', () => {
+            const progreso = notif.querySelector('.notif-progreso');
+            progreso.style.animationPlayState = 'paused';
+        });
+        
+        notif.addEventListener('mouseleave', () => {
+            const progreso = notif.querySelector('.notif-progreso');
+            progreso.style.animationPlayState = 'running';
+        });
+        
+        // Auto-cerrar
+        setTimeout(() => {
+            if (notif.parentNode) {
+                cerrarNotificacion(notif);
             }
         }, duracion);
+        
+        function cerrarNotificacion(elemento) {
+            elemento.style.transform = 'translateX(100%)';
+            elemento.style.opacity = '0';
+            setTimeout(() => {
+                if (elemento.parentNode) {
+                    elemento.parentNode.removeChild(elemento);
+                }
+            }, 400);
+        }
     }
     
+    // NUEVAS FUNCIONES DE UTILIDAD (del script nuevo)
     function deshabilitarBoton(boton, texto = 'Procesando...') {
         if (boton) {
             boton.disabled = true;
@@ -623,9 +711,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // === EVENT LISTENERS ===
-    
-    // Toggle del dropdown de autenticación
+    // Event listeners de autenticación (mejorados)
     if (loginToggle) {
         loginToggle.addEventListener('click', function(e) {
             e.preventDefault();
@@ -640,7 +726,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Cambiar entre formularios
     if (mostrarRegistro) {
         mostrarRegistro.addEventListener('click', function(e) {
             e.preventDefault();
@@ -655,7 +740,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // === MANEJO DEL FORMULARIO DE LOGIN ===
+    // Formularios de autenticación (tu código original + mejoras)
     if (formLogin) {
         formLogin.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -663,17 +748,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData(this);
             const submitBtn = this.querySelector('button[type="submit"]');
             
-            // Validación básica
             const email = formData.get('email');
             const password = formData.get('password');
             
             if (!email || !password) {
-                mostrarMensaje('Por favor, completa todos los campos', 'error');
+                mostrarNotificacion('Por favor, completa todos los campos', 'error');
                 return;
             }
             
             if (!email.includes('@')) {
-                mostrarMensaje('Por favor, ingresa un email válido', 'error');
+                mostrarNotificacion('Por favor, ingresa un email válido', 'error');
                 return;
             }
             
@@ -683,6 +767,252 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 body: formData
             })
+            .then(response => response.json())
+            .then(data => {
+                if (data.exito) {
+                    mostrarNotificacion('¡Login exitoso! Recargando página...', 'exito');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    mostrarNotificacion(data.mensaje || 'Error en el login', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarNotificacion('Error de conexión', 'error');
+            })
+            .finally(() => {
+                habilitarBoton(submitBtn);
+            });
+        });
+    }
+    
+    if (formRegistro) {
+        formRegistro.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const password = formData.get('contrasena');
+            const confirmPassword = formData.get('confirmar_contrasena');
+            
+            if (password !== confirmPassword) {
+                mostrarNotificacion('Las contraseñas no coinciden', 'error');
+                return;
+            }
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            deshabilitarBoton(submitBtn, 'Registrando...');
+            
+            fetch('registro_proceso.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.exito) {
+                    document.getElementById('email-verificar').value = formData.get('correo');
+                    document.getElementById('codigo-temp').textContent = data.codigo;
+                    mostrarFormulario(verifyForm);
+                    mostrarNotificacion('¡Registro exitoso! Verifica tu email.', 'exito');
+                } else {
+                    mostrarNotificacion(data.mensaje || 'Error en el registro', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarNotificacion('Error de conexión', 'error');
+            })
+            .finally(() => {
+                habilitarBoton(submitBtn);
+            });
+        });
+    }
+    
+    if (formVerificacion) {
+        formVerificacion.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            deshabilitarBoton(submitBtn, 'Verificando...');
+            
+            fetch('verificar_proceso.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.exito) {
+                    mostrarNotificacion('¡Email verificado! Ya puedes iniciar sesión.', 'exito');
+                    setTimeout(() => {
+                        mostrarFormulario(loginForm);
+                    }, 2000);
+                } else {
+                    mostrarNotificacion(data.mensaje || 'Código inválido', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarNotificacion('Error de conexión', 'error');
+            })
+            .finally(() => {
+                habilitarBoton(submitBtn);
+            });
+        });
+    }
+    
+    // ===================================================
+    // SISTEMA DE CARRITO (MEJORADO)
+    // ===================================================
+    
+    function crearCarritoOverlay() {
+        if (!carritoOverlay) {
+            carritoOverlay = document.createElement('div');
+            carritoOverlay.className = 'carrito-overlay';
+            carritoOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.3);
+                z-index: 999;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+            `;
+            carritoOverlay.addEventListener('click', cerrarVistaPrevia);
+            document.body.appendChild(carritoOverlay);
+        }
+        return carritoOverlay;
+    }
+    
+    function mostrarCarritoOverlay() {
+        const overlay = crearCarritoOverlay();
+        overlay.style.opacity = '1';
+        overlay.style.visibility = 'visible';
+    }
+    
+    function ocultarCarritoOverlay() {
+        if (carritoOverlay) {
+            carritoOverlay.style.opacity = '0';
+            carritoOverlay.style.visibility = 'hidden';
+        }
+    }
+    
+    // TU FUNCIÓN actualizarContadorCarrito ORIGINAL (renombrada para consistencia)
+    function actualizarContador(nuevaCantidad) {
+        if (contadorCarrito) {
+            contadorCarrito.textContent = nuevaCantidad;
+            contadorCarrito.style.animation = 'none';
+            setTimeout(() => {
+                contadorCarrito.style.animation = 'bounceIn 0.5s ease-out';
+            }, 10);
+        }
+    }
+    
+    // TU FUNCIÓN cargarVistaPrevia ORIGINAL (sin cambios)
+    function cargarVistaPrevia() {
+        if (!productosVistaPrevia) return;
+        
+        productosVistaPrevia.innerHTML = '<div class="carrito-loading"><p>Cargando carrito...</p></div>';
+        
+        fetch('vistapreviacarrito.php', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.text();
+        })
+        .then(text => {
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                throw new Error(`Error parsing JSON: ${e.message}. Response: ${text.substring(0, 200)}`);
+            }
+        })
+        .then(data => {
+            if (productosVistaPrevia) {
+                if (data.error) {
+                    productosVistaPrevia.innerHTML = `
+                        <div class="carrito-error">
+                            <p>Error: ${data.mensaje}</p>
+                        </div>
+                    `;
+                    return;
+                }
+                if (data.productos && data.productos.length > 0) {
+                    let html = '';
+                    data.productos.forEach(producto => {
+                        html += `
+                            <div class="producto-preview">
+                                <img src="${producto.imagen}" alt="${producto.nombre}" onerror="this.src='img/no-image.png'">
+                                <div class="producto-info">
+                                    <h4>${producto.nombre}</h4>
+                                    <p>Cantidad: ${producto.cantidad} - $${parseFloat(producto.precio).toFixed(2)}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += `
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                            <strong>Total: $${parseFloat(data.total).toFixed(2)}</strong>
+                        </div>
+                    `;
+                    productosVistaPrevia.innerHTML = html;
+                } else {
+                    productosVistaPrevia.innerHTML = `
+                        <div class="carrito-vacio">
+                            <p>Tu carrito está vacío</p>
+                        </div>
+                    `;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Vista previa - Error completo:', error);
+            if (productosVistaPrevia) {
+                productosVistaPrevia.innerHTML = `
+                    <div class="carrito-error">
+                        <p>Error al cargar el carrito</p>
+                    </div>
+                `;
+            }
+        });
+    }
+    
+    // Manejar botones agregar al carrito (tu código original + notificaciones mejoradas)
+    botonesAgregar.forEach(boton => {
+        boton.addEventListener('click', function(e) {
+            e.preventDefault();
+            const productoId = this.getAttribute('data-id');
+            const productoNombre = this.getAttribute('data-nombre');
+            const productoPrecio = this.getAttribute('data-precio');
+            
+            if (!productoId || !productoNombre || !productoPrecio) {
+                mostrarNotificacion('Error: Datos del producto incompletos', 'error');
+                return;
+            }
+            
+            const botonOriginal = this.innerHTML;
+            this.innerHTML = 'Agregando...';
+            this.classList.add('agregando');
+            this.disabled = true;
+
+            fetch('carrito_ajax.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `id=${encodeURIComponent(productoId)}&accion=agregar`
+            })
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -690,182 +1020,151 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.text();
             })
             .then(text => {
-                let data;
                 try {
-                    data = JSON.parse(text);
+                    return JSON.parse(text);
                 } catch (e) {
-                    console.error('Error parsing JSON:', e);
-                    console.error('Response text:', text);
-                    throw new Error('Error en la respuesta del servidor');
+                    throw new Error(`Error parsing JSON: ${e.message}. Response: ${text.substring(0, 200)}`);
                 }
-                
+            })
+            .then(data => {
+                this.innerHTML = botonOriginal;
+                this.classList.remove('agregando');
+                this.disabled = false;
+
                 if (data.exito) {
-                    mostrarMensaje('¡Inicio de sesión exitoso! Recargando página...', 'exito');
+                    actualizarContador(data.cantidad_total);
+                    this.style.background = '#26d45c';
+                    this.innerHTML = '¡Agregado!';
                     setTimeout(() => {
-                        window.location.reload();
+                        this.style.background = '';
+                        this.innerHTML = botonOriginal;
                     }, 1500);
-                } else {
-                    mostrarMensaje(data.mensaje || 'Error desconocido', 'error');
-                    habilitarBoton(submitBtn);
-                }
-            })
-            .catch(error => {
-                console.error('Error en el login:', error);
-                mostrarMensaje('Error de conexión. Inténtalo de nuevo.', 'error');
-                habilitarBoton(submitBtn);
-            });
-        });
-    }
-    
-    // === MANEJO DEL FORMULARIO DE REGISTRO ===
-    if (formRegistro) {
-        formRegistro.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const submitBtn = this.querySelector('button[type="submit"]');
-            
-            // Validaciones
-            const datos = Object.fromEntries(formData);
-            
-            if (!datos.nombre || !datos.apellido || !datos.correo || !datos.usuario || !datos.contrasena) {
-                mostrarMensaje('Por favor, completa todos los campos obligatorios', 'error');
-                return;
-            }
-            
-            if (!datos.correo.includes('@')) {
-                mostrarMensaje('Por favor, ingresa un email válido', 'error');
-                return;
-            }
-            
-            if (datos.contrasena.length < 6) {
-                mostrarMensaje('La contraseña debe tener al menos 6 caracteres', 'error');
-                return;
-            }
-            
-            if (datos.contrasena !== datos.confirmar_contrasena) {
-                mostrarMensaje('Las contraseñas no coinciden', 'error');
-                return;
-            }
-            
-            deshabilitarBoton(submitBtn, 'Creando cuenta...');
-            
-            fetch('registro_proceso.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.text())
-            .then(text => {
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    console.error('Error parsing JSON:', e);
-                    console.error('Response text:', text);
-                    throw new Error('Error en la respuesta del servidor');
-                }
-                
-                if (data.exito) {
-                    // Mostrar código temporal si está disponible
-                    if (data.codigo) {
-                        const codigoTemp = document.getElementById('codigo-temp');
-                        if (codigoTemp) {
-                            codigoTemp.textContent = data.codigo;
-                        }
-                    }
                     
-                    // Configurar email para verificación
-                    const emailVerificar = document.getElementById('email-verificar');
-                    if (emailVerificar) {
-                        emailVerificar.value = datos.correo;
-                    }
+                    // NOTIFICACIÓN MEJORADA (reemplaza modal)
+                    mostrarNotificacion(`"${productoNombre}" agregado al carrito`, 'exito');
                     
-                    mostrarMensaje('¡Cuenta creada! Ahora verifica tu email.', 'exito');
-                    setTimeout(() => {
-                        mostrarFormulario(verifyForm);
-                    }, 2000);
+                    if (carritoAbierto) {
+                        setTimeout(() => cargarVistaPrevia(), 500);
+                    }
                 } else {
-                    mostrarMensaje(data.mensaje || 'Error desconocido', 'error');
-                    habilitarBoton(submitBtn);
+                    mostrarNotificacion('Error: ' + (data.mensaje || 'Error desconocido'), 'error');
                 }
             })
             .catch(error => {
-                console.error('Error en el registro:', error);
-                mostrarMensaje('Error de conexión. Inténtalo de nuevo.', 'error');
-                habilitarBoton(submitBtn);
+                this.innerHTML = botonOriginal;
+                this.classList.remove('agregando');
+                this.disabled = false;
+                mostrarNotificacion('Error de conexión: ' + error.message, 'error');
             });
         });
-    }
+    });
     
-    // === MANEJO DEL FORMULARIO DE VERIFICACIÓN ===
-    if (formVerificacion) {
-        formVerificacion.addEventListener('submit', function(e) {
+    // Toggle vista previa del carrito (tu código original)
+    if (carritoToggle) {
+        carritoToggle.addEventListener('click', function(e) {
             e.preventDefault();
-            
-            const formData = new FormData(this);
-            const submitBtn = this.querySelector('button[type="submit"]');
-            
-            const codigo = formData.get('codigo');
-            const email = formData.get('email');
-            
-            if (!codigo || !email) {
-                mostrarMensaje('Código y email son requeridos', 'error');
-                return;
+            if (!carritoAbierto) {
+                cargarVistaPrevia();
+                mostrarVistaPrevia();
+            } else {
+                ocultarVistaPrevia();
             }
-            
-            if (codigo.length !== 6 || !/^\d{6}$/.test(codigo)) {
-                mostrarMensaje('El código debe tener 6 dígitos', 'error');
-                return;
-            }
-            
-            deshabilitarBoton(submitBtn, 'Verificando...');
-            
-            fetch('verificar_proceso.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.text())
-            .then(text => {
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    console.error('Error parsing JSON:', e);
-                    console.error('Response text:', text);
-                    throw new Error('Error en la respuesta del servidor');
-                }
-                
-                if (data.exito) {
-                    mostrarMensaje('¡Email verificado correctamente! Ya puedes iniciar sesión.', 'exito');
-                    setTimeout(() => {
-                        mostrarFormulario(loginForm);
-                    }, 2000);
-                } else {
-                    mostrarMensaje(data.mensaje || 'Código inválido', 'error');
-                    habilitarBoton(submitBtn);
-                }
-            })
-            .catch(error => {
-                console.error('Error en la verificación:', error);
-                mostrarMensaje('Error de conexión. Inténtalo de nuevo.', 'error');
-                habilitarBoton(submitBtn);
-            });
         });
     }
     
-    // === CERRAR DROPDOWN CON ESCAPE ===
+    function mostrarVistaPrevia() {
+        if (vistaPrevia) {
+            vistaPrevia.classList.remove('vista-previa-oculta');
+            setTimeout(() => vistaPrevia.classList.add('mostrar'), 10);
+            carritoAbierto = true;
+        }
+    }
+    
+    function ocultarVistaPrevia() {
+        if (vistaPrevia) {
+            vistaPrevia.classList.remove('mostrar');
+            setTimeout(() => vistaPrevia.classList.add('vista-previa-oculta'), 300);
+            carritoAbierto = false;
+        }
+    }
+    
+    // Cerrar vista previa
+    if (cerrarVistaPrevia) {
+        cerrarVistaPrevia.addEventListener('click', ocultarVistaPrevia);
+    }
+    
+    // Cerrar con Escape (mejorado para ambos sistemas)
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && dropdownAbierto) {
-            cerrarDropdown();
+        if (e.key === 'Escape') {
+            if (carritoAbierto) {
+                ocultarVistaPrevia();
+            } else if (dropdownAbierto) {
+                cerrarDropdown();
+            }
         }
     });
     
-    // === PREVENIR CIERRE AL HACER CLIC DENTRO DEL DROPDOWN ===
+    // Prevenir cierre al hacer clic dentro
+    if (vistaPrevia) {
+        vistaPrevia.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+    
     if (authDropdown) {
         authDropdown.addEventListener('click', function(e) {
             e.stopPropagation();
         });
     }
+    
+    // Cargar contador inicial
+    cargarVistaPrevia();
+    
+    // ===================================================
+    // AJUSTES DE POSICIONES DEL HEADER
+    // ===================================================
+    
+    function ajustarPosicionesHeader() {
+        const dropdownUsuario = document.querySelector('.dropdown-usuario-content');
+        const vistaCarrito = document.getElementById('vista-previa-carrito');
+        
+        // Asegurar posiciones físicas separadas
+        if (dropdownUsuario) {
+            dropdownUsuario.style.zIndex = '1100';
+            dropdownUsuario.style.right = '0px'; // Mantener a la derecha del usuario
+            dropdownUsuario.style.left = 'auto'; // No usar left
+        }
+        
+        if (vistaCarrito) {
+            vistaCarrito.style.zIndex = '1000';
+            vistaCarrito.style.left = '70%'; // Mover más a la derecha
+            vistaCarrito.style.right = 'auto'; // No usar right
+        }
+        
+        // Prevenir superposición forzando cierre mutuo
+        if (carritoToggle) {
+            carritoToggle.addEventListener('click', function() {
+                if (dropdownUsuario && dropdownUsuario.style.display !== 'none') {
+                    dropdownUsuario.style.display = 'none';
+                    dropdownUsuario.style.opacity = '0';
+                    dropdownUsuario.style.transform = 'translateY(-8px) scale(0.95)';
+                }
+            });
+        }
+        
+        const usuarioInfo = document.querySelector('.usuario-info');
+        if (usuarioInfo) {
+            usuarioInfo.addEventListener('mouseenter', function() {
+                if (carritoAbierto) {
+                    ocultarVistaPrevia();
+                }
+            });
+        }
+    }
+    
+    ajustarPosicionesHeader();
+    
+    console.log('Sistemas de autenticación y carrito inicializados correctamente');
 });
 
 // === FUNCIÓN PARA CERRAR SESIÓN (GLOBAL) ===
@@ -892,6 +1191,32 @@ function cerrarSesion() {
         });
     }
 }
+
+// === CSS PARA LAS NOTIFICACIONES ===
+const styleNotificaciones = document.createElement('style');
+styleNotificaciones.textContent = `
+    @keyframes progreso {
+        0% { transform: scaleX(1); }
+        100% { transform: scaleX(0); }
+    }
+    
+    .notif-cerrar:hover {
+        background: rgba(0,0,0,0.1) !important;
+        color: #666 !important;
+    }
+    
+    .notif-progreso {
+        animation: progreso linear forwards;
+    }
+    
+    /* Animación de bounce para el contador */
+    @keyframes bounceIn {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+`;
+document.head.appendChild(styleNotificaciones);
 </script>
 </body>
 </html>
