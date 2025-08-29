@@ -1,4 +1,5 @@
-<?php
+ 
+ <?php
 session_start();
 require_once 'conexion.php';
 require_once 'auth.php';
@@ -130,10 +131,8 @@ function obtenerCategoriasConSubcategorias($conn) {
     return $categorias;
 }
 
-$categorias = obtenerCategoriasConSubcategorias($conn);
-?>
-
-<!DOCTYPE html>
+$categorias = obtenerCategoriasConSubcategorias();
+ <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -145,21 +144,27 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
 
+
     <!-- Meta tags mejorados -->
     <meta name="theme-color" content="#120049">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!-- CSS mejorado -->
+    <!-- CSS mejorado (reemplaza el link si tienes uno anterior) -->
     <link rel="stylesheet" href="estilopruebas.css">
     <link rel="stylesheet" href="estilocarrito.css">
 
+   
+    
+  
     <title>Librería RL - Inicio</title>
 </head>
 <body>
+<!-- Pantalla de carga -->
+
 
 <header class="header">
-    <!-- HEADER UNIFICADO -->
+    <!-- HEADER UNIFICADO - Solo una sección -->
     <div class="header-top">
         <div class="logo">
             <button class="menu">☰</button>
@@ -172,189 +177,200 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
             <button class="search-button">🔍</button>
         </div>
         
-        <!-- NAVEGACIÓN CORREGIDA -->
-        <nav class="nav-links">
-            <?php if ($usuarioLogueado): ?>
-                <!-- USUARIO LOGUEADO - Todo en una sola línea -->
-                <div class="usuario-logueado">
-                    <!-- Info del usuario -->
-                    <div class="dropdown-usuario">
-                        <a href="#" class="usuario-info">
-                            👤 Hola, <?php echo htmlspecialchars($usuarioActual['Nombre'] ?? ($usuarioActual['usuario'] ?? 'Usuario')); ?>
-                        </a>
-                        <div class="dropdown-usuario-content">
-                            <a href="#">Mi Perfil</a>
-                            <a href="#">Mis Pedidos</a>
-                            <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
-                        </div>
+        <!-- REEMPLAZAR la sección <nav class="nav-links"> en home.php con este código -->
+
+<nav class="nav-links">
+    <?php if ($usuarioLogueado): ?>
+        <!-- USUARIO LOGUEADO -->
+        <div class="usuario-logueado">
+            <div class="dropdown-usuario">
+                <a href="#" class="usuario-info">
+                    👤 Hola, <?php echo htmlspecialchars($usuarioActual['Nombre'] ?? ($usuarioActual['usuario'] ?? 'Usuario')); ?>
+                </a>
+                <div class="dropdown-usuario-content">
+                    <a href="#">Mi Perfil</a>
+                    <a href="#">Mis Pedidos</a>
+                    <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CARRITO -->
+        <div class="carrito-container">
+            <a href="#" id="carrito-toggle" class="carrito-link">
+                🛒 <span id="contador-carrito"><?php echo $cantidadCarrito; ?></span>
+            </a>
+            <div id="vista-previa-carrito" class="vista-previa-oculta">
+                <div class="carrito-header">
+                    <h3>Mi Carrito</h3>
+                    <span class="cerrar-vista-previa">&times;</span>
+                </div>
+                <div id="productos-vista-previa">
+                    <div class="carrito-loading">
+                        <p>Cargando carrito...</p>
                     </div>
+                </div>
+                <div class="carrito-footer">
+                    <a href="vercarrito.php" class="btn-ver-carrito">Ver Carrito Completo</a>
+                </div>
+            </div>
+        </div>
+        
+    <?php else: ?>
+        <!-- USUARIO NO LOGUEADO -->
+        <div class="auth-container">
+            <a href="#" id="login-toggle" class="auth-link">Iniciar Sesión</a>
+            
+            <!-- DROPDOWN DE AUTENTICACIÓN -->
+            <div id="auth-dropdown" class="auth-dropdown-oculto">
+                <!-- FORMULARIO DE LOGIN -->
+                <div id="login-form" class="auth-form">
+                    <h3>Iniciar Sesión</h3>
                     
-                    <!-- Carrito al lado del usuario -->
-                    <div class="carrito-container">
-                        <a href="#" id="carrito-toggle" class="carrito-link">
-                            🛒 <span id="contador-carrito"><?php echo $cantidadCarrito; ?></span>
-                        </a>
-                        <div id="vista-previa-carrito" class="vista-previa-oculta">
-                            <div class="carrito-header">
-                                <h3>Mi Carrito</h3>
-                                <span class="cerrar-vista-previa">&times;</span>
+                    <form id="form-login" method="post">
+                        <div class="form-group">
+                            <input type="email" 
+                                   id="login-email" 
+                                   name="email" 
+                                   placeholder="Correo electrónico" 
+                                   required
+                                   autocomplete="email">
+                        </div>
+                        <div class="form-group">
+                            <input type="password" 
+                                   id="login-password" 
+                                   name="password" 
+                                   placeholder="Contraseña" 
+                                   required
+                                   autocomplete="current-password">
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="recordarme" name="recordarme" value="1">
+                                <span>Recordarme</span>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn-auth">Iniciar Sesión</button>
+                    </form>
+                    
+                    <div class="auth-separator">
+                        <span>¿No tienes cuenta?</span>
+                        <a href="#" id="mostrar-registro">Regístrate aquí</a>
+                    </div>
+                </div>
+
+                <!-- FORMULARIO DE REGISTRO -->
+                <div id="register-form" class="auth-form auth-form-oculto">
+                    <h3>Crear Cuenta</h3>
+                    
+                    <form id="form-registro" method="post">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <input type="text" 
+                                       name="nombre" 
+                                       placeholder="Nombre" 
+                                       required
+                                       autocomplete="given-name">
                             </div>
-                            <div id="productos-vista-previa">
-                                <div class="carrito-loading">
-                                    <p>Cargando carrito...</p>
-                                </div>
-                            </div>
-                            <div class="carrito-footer">
-                                <a href="vercarrito.php" class="btn-ver-carrito">Ver Carrito Completo</a>
+                            <div class="form-group">
+                                <input type="text" 
+                                       name="apellido" 
+                                       placeholder="Apellido" 
+                                       required
+                                       autocomplete="family-name">
                             </div>
                         </div>
+                        <div class="form-group">
+                            <input type="email" 
+                                   name="correo" 
+                                   placeholder="Correo electrónico" 
+                                   required
+                                   autocomplete="email">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" 
+                                   name="usuario" 
+                                   placeholder="Nombre de usuario" 
+                                   required
+                                   autocomplete="username">
+                        </div>
+                        <div class="form-group">
+                            <input type="tel" 
+                                   name="telefono" 
+                                   placeholder="Teléfono (opcional)"
+                                   autocomplete="tel">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" 
+                                   name="direccion" 
+                                   placeholder="Dirección (opcional)"
+                                   autocomplete="street-address">
+                        </div>
+                        <div class="form-group">
+                            <input type="password" 
+                                   name="contrasena" 
+                                   placeholder="Contraseña" 
+                                   required 
+                                   minlength="6"
+                                   autocomplete="new-password">
+                        </div>
+                        <div class="form-group">
+                            <input type="password" 
+                                   name="confirmar_contrasena" 
+                                   placeholder="Confirmar contraseña" 
+                                   required 
+                                   minlength="6"
+                                   autocomplete="new-password">
+                        </div>
+                        <button type="submit" class="btn-auth">Crear Cuenta</button>
+                    </form>
+                    
+                    <div class="auth-separator">
+                        <span>¿Ya tienes cuenta?</span>
+                        <a href="#" id="mostrar-login">Inicia sesión aquí</a>
+                    </div>
+                </div>
+
+                <!-- FORMULARIO DE VERIFICACIÓN -->
+                <div id="verify-form" class="auth-form auth-form-oculto">
+                    <h3>Verificar Email</h3>
+                    <p>Te enviamos un código de 6 dígitos a tu correo electrónico.</p>
+                    <p><strong>Código temporal para desarrollo: <span id="codigo-temp">------</span></strong></p>
+                    
+                    <form id="form-verificacion" method="post">
+                        <div class="form-group">
+                            <input type="text" 
+                                   id="codigo-verificacion" 
+                                   name="codigo" 
+                                   placeholder="Código de 6 dígitos" 
+                                   maxlength="6" 
+                                   required
+                                   pattern="[0-9]{6}"
+                                   autocomplete="one-time-code">
+                        </div>
+                        <input type="hidden" id="email-verificar" name="email">
+                        <button type="submit" class="btn-auth">Verificar</button>
+                    </form>
+                    
+                    <div class="auth-separator">
+                        <a href="#" id="reenviar-codigo">¿No recibiste el código? Reenviar</a>
                     </div>
                 </div>
                 
-            <?php else: ?>
-                <!-- USUARIO NO LOGUEADO -->
-                <div class="auth-container">
-                    <a href="#" id="login-toggle" class="auth-link">Iniciar Sesión</a>
-                    
-                    <!-- DROPDOWN DE AUTENTICACIÓN -->
-                    <div id="auth-dropdown" class="auth-dropdown-oculto">
-                        <!-- FORMULARIO DE LOGIN -->
-                        <div id="login-form" class="auth-form">
-                            <h3>Iniciar Sesión</h3>
-                            
-                            <form id="form-login" method="post">
-                                <div class="form-group">
-                                    <input type="email" 
-                                           id="login-email" 
-                                           name="email" 
-                                           placeholder="Correo electrónico" 
-                                           required
-                                           autocomplete="email">
-                                </div>
-                                <div class="form-group">
-                                    <input type="password" 
-                                           id="login-password" 
-                                           name="password" 
-                                           placeholder="Contraseña" 
-                                           required
-                                           autocomplete="current-password">
-                                </div>
-                                <div class="form-group">
-                                    <label class="checkbox-container">
-                                        <input type="checkbox" id="recordarme" name="recordarme" value="1">
-                                        <span>Recordarme</span>
-                                    </label>
-                                </div>
-                                <button type="submit" class="btn-auth">Iniciar Sesión</button>
-                            </form>
-                            
-                            <div class="auth-separator">
-                                <span>¿No tienes cuenta?</span>
-                                <a href="#" id="mostrar-registro">Regístrate aquí</a>
-                            </div>
-                        </div>
-
-                        <!-- FORMULARIO DE REGISTRO -->
-                        <div id="register-form" class="auth-form auth-form-oculto">
-                            <h3>Crear Cuenta</h3>
-                            
-                            <form id="form-registro" method="post">
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <input type="text" 
-                                               name="nombre" 
-                                               placeholder="Nombre" 
-                                               required
-                                               autocomplete="given-name">
-                                    </div>
-                                    <div class="form-group">
-                                        <input type="text" 
-                                               name="apellido" 
-                                               placeholder="Apellido" 
-                                               required
-                                               autocomplete="family-name">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <input type="email" 
-                                           name="correo" 
-                                           placeholder="Correo electrónico" 
-                                           required
-                                           autocomplete="email">
-                                </div>
-                                <div class="form-group">
-                                    <input type="text" 
-                                           name="usuario" 
-                                           placeholder="Nombre de usuario" 
-                                           required
-                                           autocomplete="username">
-                                </div>
-                                <div class="form-group">
-                                    <input type="tel" 
-                                           name="telefono" 
-                                           placeholder="Teléfono (opcional)"
-                                           autocomplete="tel">
-                                </div>
-                                <div class="form-group">
-                                    <input type="text" 
-                                           name="direccion" 
-                                           placeholder="Dirección (opcional)"
-                                           autocomplete="street-address">
-                                </div>
-                                <div class="form-group">
-                                    <input type="password" 
-                                           name="contrasena" 
-                                           placeholder="Contraseña" 
-                                           required 
-                                           minlength="6"
-                                           autocomplete="new-password">
-                                </div>
-                                <div class="form-group">
-                                    <input type="password" 
-                                           name="confirmar_contrasena" 
-                                           placeholder="Confirmar contraseña" 
-                                           required 
-                                           minlength="6"
-                                           autocomplete="new-password">
-                                </div>
-                                <button type="submit" class="btn-auth">Crear Cuenta</button>
-                            </form>
-                            
-                            <div class="auth-separator">
-                                <span>¿Ya tienes cuenta?</span>
-                                <a href="#" id="mostrar-login">Inicia sesión aquí</a>
-                            </div>
-                        </div>
-
-                        <!-- FORMULARIO DE VERIFICACIÓN -->
-                        <div id="verify-form" class="auth-form auth-form-oculto">
-                            <h3>Verificar Email</h3>
-                            <p>Te enviamos un código de 6 dígitos a tu correo electrónico.</p>
-                            <p><strong>Código temporal para desarrollo: <span id="codigo-temp">------</span></strong></p>
-                            
-                            <form id="form-verificacion" method="post">
-                                <div class="form-group">
-                                    <input type="text" 
-                                           id="codigo-verificacion" 
-                                           name="codigo" 
-                                           placeholder="Código de 6 dígitos" 
-                                           maxlength="6" 
-                                           required
-                                           pattern="[0-9]{6}"
-                                           autocomplete="one-time-code">
-                                </div>
-                                <input type="hidden" id="email-verificar" name="email">
-                                <button type="submit" class="btn-auth">Verificar</button>
-                            </form>
-                            
-                            <div class="auth-separator">
-                                <a href="#" id="reenviar-codigo">¿No recibiste el código? Reenviar</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            <?php endif; ?>
-        </nav>
+            </div>
+        </div>
+        
+        <!-- CARRITO PARA INVITADOS (opcional - puedes comentar esta sección si no quieres carrito para invitados) -->
+        <!-- 
+        <div class="carrito-container">
+            <a href="#" id="carrito-toggle-invitado" class="carrito-link">
+                🛒 <span id="contador-carrito-invitado">0</span>
+            </a>
+        </div>
+        -->
+        
+    <?php endif; ?>
+</nav>
     </div>
 </header>
 
@@ -563,7 +579,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // FUNCIÓN DE NOTIFICACIONES MEJORADA
+    // FUNCIÓN DE NOTIFICACIONES MEJORADA (reemplaza la anterior)
     function mostrarNotificacion(mensaje, tipo = 'exito', duracion = 4000) {
         const contenedor = document.getElementById('notificaciones-container');
         if (!contenedor) return;
@@ -674,7 +690,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // NUEVAS FUNCIONES DE UTILIDAD
+    // NUEVAS FUNCIONES DE UTILIDAD (del script nuevo)
     function deshabilitarBoton(boton, texto = 'Procesando...') {
         if (boton) {
             boton.disabled = true;
@@ -694,7 +710,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Event listeners de autenticación
+    // Event listeners de autenticación (mejorados)
     if (loginToggle) {
         loginToggle.addEventListener('click', function(e) {
             e.preventDefault();
@@ -723,7 +739,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Formularios de autenticación
+    // Formularios de autenticación (tu código original + mejoras)
     if (formLogin) {
         formLogin.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -849,6 +865,42 @@ document.addEventListener('DOMContentLoaded', function() {
     // SISTEMA DE CARRITO (MEJORADO)
     // ===================================================
     
+    function crearCarritoOverlay() {
+        if (!carritoOverlay) {
+            carritoOverlay = document.createElement('div');
+            carritoOverlay.className = 'carrito-overlay';
+            carritoOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.3);
+                z-index: 999;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+            `;
+            carritoOverlay.addEventListener('click', cerrarVistaPrevia);
+            document.body.appendChild(carritoOverlay);
+        }
+        return carritoOverlay;
+    }
+    
+    function mostrarCarritoOverlay() {
+        const overlay = crearCarritoOverlay();
+        overlay.style.opacity = '1';
+        overlay.style.visibility = 'visible';
+    }
+    
+    function ocultarCarritoOverlay() {
+        if (carritoOverlay) {
+            carritoOverlay.style.opacity = '0';
+            carritoOverlay.style.visibility = 'hidden';
+        }
+    }
+    
+    // TU FUNCIÓN actualizarContadorCarrito ORIGINAL (renombrada para consistencia)
     function actualizarContador(nuevaCantidad) {
         if (contadorCarrito) {
             contadorCarrito.textContent = nuevaCantidad;
@@ -859,6 +911,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // TU FUNCIÓN cargarVistaPrevia ORIGINAL (sin cambios)
     function cargarVistaPrevia() {
         if (!productosVistaPrevia) return;
         
@@ -902,14 +955,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <img src="${producto.imagen}" alt="${producto.nombre}" onerror="this.src='img/no-image.png'">
                                 <div class="producto-info">
                                     <h4>${producto.nombre}</h4>
-                                    <p>Cantidad: ${producto.cantidad} - ${parseFloat(producto.precio).toFixed(2)}</p>
+                                    <p>Cantidad: ${producto.cantidad} - $${parseFloat(producto.precio).toFixed(2)}</p>
                                 </div>
                             </div>
                         `;
                     });
                     html += `
                         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                            <strong>Total: ${parseFloat(data.total).toFixed(2)}</strong>
+                            <strong>Total: $${parseFloat(data.total).toFixed(2)}</strong>
                         </div>
                     `;
                     productosVistaPrevia.innerHTML = html;
@@ -934,7 +987,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Manejar botones agregar al carrito
+    // Manejar botones agregar al carrito (tu código original + notificaciones mejoradas)
     botonesAgregar.forEach(boton => {
         boton.addEventListener('click', function(e) {
             e.preventDefault();
@@ -986,6 +1039,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         this.innerHTML = botonOriginal;
                     }, 1500);
                     
+                    // NOTIFICACIÓN MEJORADA (reemplaza modal)
                     mostrarNotificacion(`"${productoNombre}" agregado al carrito`, 'exito');
                     
                     if (carritoAbierto) {
@@ -1004,7 +1058,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Toggle vista previa del carrito
+    // Toggle vista previa del carrito (tu código original)
     if (carritoToggle) {
         carritoToggle.addEventListener('click', function(e) {
             e.preventDefault();
@@ -1038,7 +1092,7 @@ document.addEventListener('DOMContentLoaded', function() {
         cerrarVistaPrevia.addEventListener('click', ocultarVistaPrevia);
     }
     
-    // Cerrar con Escape
+    // Cerrar con Escape (mejorado para ambos sistemas)
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             if (carritoAbierto) {
@@ -1065,6 +1119,50 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cargar contador inicial
     cargarVistaPrevia();
     
+    // ===================================================
+    // AJUSTES DE POSICIONES DEL HEADER
+    // ===================================================
+    
+    function ajustarPosicionesHeader() {
+        const dropdownUsuario = document.querySelector('.dropdown-usuario-content');
+        const vistaCarrito = document.getElementById('vista-previa-carrito');
+        
+        // Asegurar posiciones físicas separadas
+        if (dropdownUsuario) {
+            dropdownUsuario.style.zIndex = '1100';
+            dropdownUsuario.style.right = '0px'; // Mantener a la derecha del usuario
+            dropdownUsuario.style.left = 'auto'; // No usar left
+        }
+        
+        if (vistaCarrito) {
+            vistaCarrito.style.zIndex = '1000';
+            vistaCarrito.style.left = '70%'; // Mover más a la derecha
+            vistaCarrito.style.right = 'auto'; // No usar right
+        }
+        
+        // Prevenir superposición forzando cierre mutuo
+        if (carritoToggle) {
+            carritoToggle.addEventListener('click', function() {
+                if (dropdownUsuario && dropdownUsuario.style.display !== 'none') {
+                    dropdownUsuario.style.display = 'none';
+                    dropdownUsuario.style.opacity = '0';
+                    dropdownUsuario.style.transform = 'translateY(-8px) scale(0.95)';
+                }
+            });
+        }
+        
+        const usuarioInfo = document.querySelector('.usuario-info');
+        if (usuarioInfo) {
+            usuarioInfo.addEventListener('mouseenter', function() {
+                if (carritoAbierto) {
+                    ocultarVistaPrevia();
+                }
+            });
+        }
+    }
+    
+    ajustarPosicionesHeader();
+    
     console.log('Sistemas de autenticación y carrito inicializados correctamente');
 });
 
@@ -1087,6 +1185,7 @@ function cerrarSesion() {
         })
         .catch(error => {
             console.error('Error:', error);
+            // Intentar cerrar sesión de forma manual como fallback
             window.location.href = 'logout_proceso.php';
         });
     }

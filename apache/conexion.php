@@ -1,18 +1,9 @@
 <?php
+$host = "mysql";    // porque expones el puerto al host
+$port = 3306;           
+$user = "app_user";     
+$pass = "app_pass";     
+$db   = "app_db";       
 
-$servidor = "mysql";  
-$usuario = "app_user";  
-$contrasena = "app_pass";  
-$baseDatos = "app_bd"; 
-$puerto = 3060;
-
-$conexion = new mysqli($servidor, $usuario, $contrasena, $baseDatos, $puerto);
-
-if ($conexion->connect_error) {
-    die("Error de conexión: " . $conexion->connect_error);
-}
-
-
-$conexion->set_charset("utf8");
+$conn = new mysqli($host, $user, $pass, $db, $port);
 ?>
-

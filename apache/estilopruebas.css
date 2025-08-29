@@ -946,39 +946,6 @@ a {
     border-radius: 4px;
 }
 
-/* Responsividad específica para el dropdown */
-@media (max-width: 768px) {
-    #auth-dropdown {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        right: auto;
-        transform: translate(-50%, -50%);
-        min-width: 300px;
-        max-width: 90vw;
-    }
-    #auth-dropdown.mostrar {
-        transform: translate(-50%, -50%);
-    }
-    .form-row {
-        flex-direction: column;
-        gap: 0;
-    }
-}
-
-/* Mejora en la tipografía */
-.header,
-.menu-secundario {
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* Animaciones suaves */
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
-
 /* Estados de focus mejorados */
 .search-container input:focus,
 .nav-links a:focus,
@@ -1051,7 +1018,8 @@ a {
     font-weight: bold;
     color: white;
     min-width: 180px;
-    flex-shrink: 0;  min-width: 120px;
+    flex-shrink: 0;  
+    min-width: 120px;
         font-size: 16px;
     }
     .search-container {
@@ -1223,6 +1191,13 @@ a {
 
 .dropdown-usuario:hover .dropdown-usuario-content {
     animation: dropdownSlideIn 0.25s ease-out;
+}
+
+/* Estados de focus para accesibilidad */
+.dropdown-usuario-content a:focus {
+    outline: 2px solid #ffb703;
+    outline-offset: 2px;
+    background: rgba(255, 183, 3, 0.1);
 }
 
 /* === CARRITO - POSICIÓN CORREGIDA === */
@@ -1495,4 +1470,17 @@ a {
         flex-direction: column;
         gap: 0;
     }
+}
+
+/* Mejora en la tipografía */
+.header,
+.menu-secundario {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Animaciones suaves */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
 }
