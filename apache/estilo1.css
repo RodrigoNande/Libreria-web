@@ -810,128 +810,106 @@ a {
 /* === Autenticación y usuario === */
 .auth-container {
     position: relative;
+    display: inline-block;
 }
 
 .auth-link {
-    color: #333;
+    color: white;
     text-decoration: none;
-    padding: 8px 16px;
-    border: 1px solid #ddd;
+    padding: 8px 12px;
     border-radius: 4px;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease;
 }
 
 .auth-link:hover {
-    background: #f8f9fa;
-    border-color: #007bff;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 #auth-dropdown {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    width: 320px;
-    z-index: 1000;
-    max-height: 500px;
-    overflow-y: auto;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    min-width: 320px;
+    max-width: 400px;
+    margin-top: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+#auth-dropdown.mostrar {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
 }
 
 .auth-dropdown-oculto {
-    opacity: 0;
-    transform: translateY(-10px);
-    pointer-events: none;
+    display: none !important;
 }
 
-.auth-dropdown.mostrar {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: all;
-}
-
+/* Mejoras en formularios de autenticación */
 .auth-form {
-    padding: 20px;
+    padding: 25px;
+    display: block;
+}
+
+.auth-form-oculto {
+    display: none !important;
 }
 
 .auth-form h3 {
-    margin: 0 0 20px 0;
-    text-align: center;
-    color: #333;
+    font-size: 18px;
+    font-weight: 600;
 }
 
-.form-row {
-    display: flex;
-    gap: 10px;
-}
-
-.form-group {
-    margin-bottom: 15px;
+.form-row .form-group {
     flex: 1;
 }
 
 .form-group input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    box-sizing: border-box;
+    padding: 12px;
+    border-radius: 6px;
 }
 
 .form-group input:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    border-color: #120049;
+    box-shadow: 0 0 0 2px rgba(18, 0, 73, 0.1);
 }
 
 .checkbox-container {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    font-size: 14px;
+    gap: 8px;
+    color: #666;
 }
-
-.checkbox-container input {
-    margin-right: 8px;
-}
-
 
 .btn-auth {
-    width: 100%;
-    padding: 12px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background 0.3s ease;
+    background: linear-gradient(135deg, #120049, #3a0ca3);
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 15px;
 }
 
 .btn-auth:hover {
-    background: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(18, 0, 73, 0.3);
 }
 
 .btn-auth:disabled {
-    background: #6c757d;
+    opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
 }
 
 .auth-separator {
-    text-align: center;
-    margin-top: 15px;
     padding-top: 15px;
     border-top: 1px solid #eee;
-    font-size: 14px;
+    font-size: 13px;
+    color: #666;
+}
+
+.auth-separator span {
+    margin-bottom: 8px;
 }
 
 .auth-separator a {
-    color: #007bff;
-    text-decoration: none;
+    color: #120049;
     font-weight: 500;
 }
 
@@ -939,78 +917,41 @@ a {
     text-decoration: underline;
 }
 
-.auth-form-oculto {
-    display: none;
-}
-
-/* Usuario logueado */
-.usuario-logueado {
-    position: relative;
-}
-
-.dropdown-usuario {
-    position: relative;
-}
-
-.usuario-info {
-    color: #333;
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    transition: background 0.3s ease;
-}
-
-.usuario-info:hover {
-    background: #f8f9fa;
-}
-
-.dropdown-usuario-content {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    min-width: 150px;
-    z-index: 1000;
-    display: none;
-}
-
-.dropdown-usuario:hover .dropdown-usuario-content {
-    display: block;
-}
-
-.dropdown-usuario-content a {
-    display: block;
-    padding: 10px 15px;
-    color: #333;
-    text-decoration: none;
-    transition: background 0.3s ease;
-}
-
-.dropdown-usuario-content a:hover {
-    background: #f8f9fa;
-}
-
-/* Mensajes de estado */
-.mensaje {
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 4px;
+/* Estilos específicos para verificación */
+#verify-form p {
+    color: #666;
     font-size: 14px;
+    margin-bottom: 15px;
+    text-align: center;
+    line-height: 1.4;
 }
 
-.mensaje.exito {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+#codigo-temp {
+    color: #120049;
+    font-weight: bold;
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 4px;
 }
 
-.mensaje.error {
-    background: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+/* Responsividad específica para el dropdown */
+@media (max-width: 768px) {
+    #auth-dropdown {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        right: auto;
+        transform: translate(-50%, -50%);
+        min-width: 300px;
+        max-width: 90vw;
+    }
+    #auth-dropdown.mostrar {
+        transform: translate(-50%, -50%);
+    }
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
 }
 
 /* Mejora en la tipografía */
