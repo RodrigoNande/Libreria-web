@@ -175,12 +175,12 @@ function verificarEmail($email, $codigo) {
 function loginUsuario($email, $contrasena, $recordar = false) {
     global $conn;
     
-    $response = ['exito' => false, 'mensaje' => '', 'usuario' => null];
+    $response = ['exito' => false, 'mensaje' => '', 'usuario' => null, 'es_admin' => false];
     
     try {
         // Buscar usuario por email
         $stmt = $conn->prepare("
-            SELECT IdUsuario, Nombre, Apellido, Usuario, Contrasena, email_verificado, activo 
+            SELECT IdUsuario, Nombre, Apellido, Usuario, Contrasena, email_verificado, activo, Rol 
             FROM usuarios WHERE Correo = ?
         ");
         $stmt->bind_param("s", $email);
@@ -210,6 +210,7 @@ function loginUsuario($email, $contrasena, $recordar = false) {
                 $_SESSION['usuario_id'] = $usuario['IdUsuario'];
                 $_SESSION['usuario_nombre'] = $usuario['Nombre'];
                 $_SESSION['usuario_email'] = $email;
+                $_SESSION['usuario_rol'] = $usuario['Rol']; // NUEVO: Guardar rol en sesión
                 $_SESSION['login_time'] = time();
                 
                 // Actualizar último login
@@ -227,15 +228,17 @@ function loginUsuario($email, $contrasena, $recordar = false) {
                 
                 $response['exito'] = true;
                 $response['mensaje'] = 'Login exitoso';
+                $response['es_admin'] = ($usuario['Rol'] === 'admin'); // NUEVO: Indicar si es admin
                 $response['usuario'] = [
                     'id' => $usuario['IdUsuario'],
                     'nombre' => $usuario['Nombre'],
                     'apellido' => $usuario['Apellido'],
-                    'usuario' => $usuario['Usuario']
+                    'usuario' => $usuario['Usuario'],
+                    'rol' => $usuario['Rol'] // NUEVO: Incluir rol
                 ];
                 
             } else {
-                $response['mensaje'] = 'Contraseña incorrecta';
+                $response['mensaje'] = 'Contraseña incorreta';
             }
         } else {
             $response['mensaje'] = 'Usuario no encontrado';

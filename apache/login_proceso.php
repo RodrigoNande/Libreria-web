@@ -5,7 +5,7 @@ require_once 'auth.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-$response = ['exito' => false, 'mensaje' => ''];
+$response = ['exito' => false, 'mensaje' => '', 'es_admin' => false];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');

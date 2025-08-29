@@ -78,4 +78,36 @@ INSERT INTO img (idProd, ruta) VALUES
 ("ESC002", "img/cuadernoNorma.webp"),
 ("ESC003", "img/reglaMaped.jpg"),
 ("OFC001", "img/carpetamanilaAmpo.jpg"),
-("OFC002", "img/grapadoraSwingline.jpg"); 
+("OFC002", "img/grapadoraSwingline.jpg");
+
+INSERT INTO usuarios (
+    IdUsuario,
+    Nombre,
+    Apellido,
+    Correo,
+    Telefono,
+    Direccion,
+    Usuario,
+    Contrasena,
+    Rol,
+    email_verificado,
+    fecha_registro,
+    ultimo_login,
+    activo
+) VALUES (
+    'USR_ADMIN_001',
+    'Administrador',
+    'Sistema',
+    'hernandezrodri83@gmail.com',
+    '',
+    '',
+    'admin',
+    '$2y$10$e0MYzXcwE4k.6xm3BlVVa.oaLpJ1.BLnQdxuBr7wdHxLgU9O5X5K6',
+    'admin',
+    1,
+    NOW(),
+    NULL,
+    1
+);
+
+UPDATE usuarios SET Contrasena = '$2y$10$MPhFuyeaPMfTpeGNXplaR.kczblHv32xuYee.k9f8tNmoa.Q9J37C' WHERE Correo = 'hernandezrodri83@gmail.com'; 

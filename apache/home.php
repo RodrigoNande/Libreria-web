@@ -16,7 +16,7 @@ if (isset($_GET['debug'])) {
 }
 
 $usuarioLogueado = estaLogueado();
-
+$esAdmin = estaLogueado() && esAdmin();
 $usuarioActual = null;
 if ($usuarioLogueado) {
     $usuarioActual = obtenerUsuarioActual();
@@ -181,7 +181,15 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
                     <div class="dropdown-usuario">
                         <a href="#" class="usuario-info">
                             👤 Hola, <?php echo htmlspecialchars($usuarioActual['Nombre'] ?? ($usuarioActual['usuario'] ?? 'Usuario')); ?>
+                             <?php if ($esAdmin): ?>
+                                <span style="color: #ffc107; font-weight: bold;">[ADMIN]</span>
+                            <?php endif; ?>
                         </a>
+                        <div class="dropdown-usuario-content">
+                            <?php if ($esAdmin): ?>
+                                <a href="admin_productos.php" style="background: #ffc107; color: #000; font-weight: bold;">🛠️ Panel Admin</a>
+                                <hr style="margin: 5px 0; border: none; border-top: 1px solid #eee;">
+                            <?php endif; ?>
                         <div class="dropdown-usuario-content">
                             <a href="#">Mi Perfil</a>
                             <a href="#">Mis Pedidos</a>
@@ -752,15 +760,19 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
-                if (data.exito) {
-                    mostrarNotificacion('¡Login exitoso! Recargando página...', 'exito');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                } else {
-                    mostrarNotificacion(data.mensaje || 'Error en el login', 'error');
-                }
-            })
+                 if (data.exito) {
+                        if (data.es_admin) {
+            mostrarNotificacion('¡Bienvenido Administrador! Acceso completo al sistema', 'exito');
+        }                      else {
+            mostrarNotificacion('¡Login exitoso! Recargando página...', 'exito');
+        }
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
+    } else {
+        mostrarNotificacion(data.mensaje || 'Error en el login', 'error');
+    }
+})
             .catch(error => {
                 console.error('Error:', error);
                 mostrarNotificacion('Error de conexión', 'error');
