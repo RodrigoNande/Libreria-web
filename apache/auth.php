@@ -419,4 +419,10 @@ function obtenerUsuarioActual() {
     
     return $result->num_rows > 0 ? $result->fetch_assoc() : null;
 }
+/**
+ * Verificar si el usuario actual es administrador
+ */
+function esAdmin() {
+    return isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
+}
 ?>

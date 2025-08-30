@@ -102,7 +102,7 @@ INSERT INTO usuarios (
     '',
     '',
     'admin',
-    '$2y$10$e0MYzXcwE4k.6xm3BlVVa.oaLpJ1.BLnQdxuBr7wdHxLgU9O5X5K6',
+    '$2y$10$l7Wts2OWVnEAalpCs7gWvexBIcUSrkhTZxOQPhZLq8w34Ekl5G7yC',
     'admin',
     1,
     NOW(),
@@ -110,4 +110,3 @@ INSERT INTO usuarios (
     1
 );
 
-UPDATE usuarios SET Contrasena = '$2y$10$MPhFuyeaPMfTpeGNXplaR.kczblHv32xuYee.k9f8tNmoa.Q9J37C' WHERE Correo = 'hernandezrodri83@gmail.com'; 
