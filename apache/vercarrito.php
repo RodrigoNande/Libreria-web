@@ -117,11 +117,18 @@ $carrito = isset($_SESSION['carrito']) ? $_SESSION['carrito'] : [];
                         $subtotal = $producto['Precio'] * $cantidad;
                         $total += $subtotal;
                         $cantidad_items += $cantidad;
-                        $imgSrc = !empty($producto['ruta']) ? htmlspecialchars($producto['ruta']) : "img/no-image.png";
+                        $imgSrc = !empty($producto['ruta']) ? htmlspecialchars($producto['ruta']) : "";
+                        $hasImage = !empty($producto['ruta']);
                     ?>
                     <div class="item-carrito" data-producto-id="<?php echo $id; ?>">
-                        <div class="item-imagen">
-                            <img src="<?php echo $imgSrc; ?>" alt="<?php echo htmlspecialchars($producto['NomProducto']); ?>" class="item-image">
+                        <div class="item-imagen <?php echo !$hasImage ? 'no-image' : ''; ?>">
+                            <?php if ($hasImage): ?>
+                                <img src="<?php echo $imgSrc; ?>" alt="<?php echo htmlspecialchars($producto['NomProducto']); ?>" class="item-image">
+                            <?php else: ?>
+                                <div class="no-image-placeholder-cart">
+                                    <div class="no-image-icon">📷</div>
+                                </div>
+                            <?php endif; ?>
                         </div>
                         
                         <div class="item-info">

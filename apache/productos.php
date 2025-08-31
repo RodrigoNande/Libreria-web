@@ -1,6 +1,23 @@
 <?php
 session_start();
 require_once 'conexion.php';
+require_once 'auth.php';
+
+// Verificar autenticación del usuario
+$usuarioLogueado = estaLogueado();
+$esAdmin = estaLogueado() && esAdmin();
+$usuarioActual = null;
+if ($usuarioLogueado) {
+    $usuarioActual = obtenerUsuarioActual();
+    
+    if (isset($_SESSION['usuario_id']) && isset($_SESSION['usuario_nombre'])) {
+        $usuarioActual = [
+            'IdUsuario' => $_SESSION['usuario_id'],
+            'Nombre' => $_SESSION['usuario_nombre'],
+            'Correo' => $_SESSION['usuario_email'] ?? ''
+        ];
+    }
+}
 
 // Obtener parámetros de URL
 $categoria = isset($_GET['categoria']) ? $_GET['categoria'] : '';
@@ -178,6 +195,23 @@ if (!empty($subcategoria)) {
 } elseif (!empty($categoria)) {
     $titulo_pagina = htmlspecialchars($categoria);
 }
+
+// Obtener productos para mostrar
+if (empty($categoria) && empty($subcategoria)) {
+    // Si no hay filtros, obtener todos los productos
+    $sql = "SELECT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, a.Precio, a.Precio_Unitario, i.ruta
+            FROM articulo a
+            LEFT JOIN img i ON a.IdProducto = i.idProd";
+    $result_productos = $conn->query($sql);
+    $productos_a_mostrar = [];
+    if ($result_productos && $result_productos->num_rows > 0) {
+        while ($row = $result_productos->fetch_assoc()) {
+            $productos_a_mostrar[] = $row;
+        }
+    }
+} else {
+    $productos_a_mostrar = $productos_filtrados;
+}
 ?>
 
 <!DOCTYPE html>
@@ -339,6 +373,342 @@ if (!empty($subcategoria)) {
             text-align: center;
         }
 
+        /* === ESTILOS PARA AUTENTICACIÓN === */
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .auth-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .auth-link {
+            color: white;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+            font-size: 14px;
+        }
+
+        .auth-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        #auth-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            min-width: 320px;
+            max-width: 400px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        #auth-dropdown.mostrar {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .auth-dropdown-oculto {
+            display: none !important;
+        }
+
+        .auth-form {
+            padding: 25px;
+            display: block;
+        }
+
+        .auth-form-oculto {
+            display: none !important;
+        }
+
+        .auth-form h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(255, 183, 3, 0.1);
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .btn-auth {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-auth:hover {
+            background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));
+            transform: translateY(-2px);
+        }
+
+        .auth-separator {
+            text-align: center;
+            margin: 20px 0;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .auth-separator span {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .auth-separator a {
+            color: var(--primary-color);
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .auth-separator a:hover {
+            text-decoration: underline;
+        }
+
+        /* === USUARIO LOGUEADO === */
+        .usuario-logueado {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .usuario-info {
+            color: white !important;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .usuario-info:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .dropdown-usuario {
+            position: relative;
+        }
+
+        .dropdown-usuario-content {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            min-width: 200px;
+            max-width: 280px;
+            z-index: 1100;
+            display: none;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-8px) scale(0.95);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .dropdown-usuario:hover .dropdown-usuario-content {
+            display: block;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .dropdown-usuario-content a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            color: #2c3e50;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .dropdown-usuario-content a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-usuario-content a:hover {
+            background: linear-gradient(135deg, rgba(18, 0, 73, 0.05) 0%, rgba(255, 183, 3, 0.08) 100%);
+            color: var(--primary-color);
+            transform: translateX(4px);
+            padding-left: 22px;
+        }
+
+        /* === CARRITO === */
+        .carrito-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .carrito-link {
+            color: white !important;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .carrito-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        #contador-carrito {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+            border-radius: 50%;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* === NOTIFICACIONES TOAST === */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            max-width: 350px;
+        }
+
+        .toast {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            margin-bottom: 10px;
+            padding: 20px;
+            border-left: 4px solid var(--success-color);
+            animation: slideInRight 0.3s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toast.success {
+            border-left-color: var(--success-color);
+        }
+
+        .toast.error {
+            border-left-color: var(--error-color);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning-color);
+        }
+
+        .toast::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+            animation: slideProgress 3s linear;
+        }
+
+        @keyframes slideProgress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+
+        .toast-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 14px;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: var(--transition-fast);
+        }
+
+        .toast-close:hover {
+            color: var(--error-color);
+        }
+
+        .toast-message {
+            color: var(--text-medium);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
         /* Navegación secundaria */
         .nav-secondary {
             background: rgba(18, 0, 73, 0.95);
@@ -367,6 +737,121 @@ if (!empty($subcategoria)) {
         .nav-link:hover {
             background: rgba(255, 183, 3, 0.1);
             color: var(--secondary-color);
+        }
+
+        /* Dropdown de Categorías */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropbtn {
+            background: none !important;
+            pading: 1rem 1.5rem;
+            border-radius: var(--radius-md);
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            font-family: inherit;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            min-width: 800px;
+            max-width: 90vw;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-radius: var(--radius-lg);
+            z-index: 1000;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .categorias-container {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 1rem;
+        }
+
+        .columna {
+            flex: 1;
+            min-width: 200px;
+            padding: 0 1rem;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .columna:last-child {
+            border-right: none;
+        }
+
+        .columna h4 {
+            color: var(--primary-color);
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--secondary-color);
+        }
+
+        .columna ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .columna li {
+            margin-bottom: 0.5rem;
+        }
+
+        .columna a {
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 0.25rem 0;
+            display: block;
+            transition: all 0.3s ease;
+            border-radius: var(--radius-sm);
+        }
+
+        .columna a:hover {
+            color: var(--secondary-color);
+            background: rgba(255, 183, 3, 0.1);
+            padding-left: 0.5rem;
+        }
+
+        /* Responsive para Dropdown */
+        @media (max-width: 768px) {
+            .dropdown-content {
+                min-width: 300px;
+                max-width: 95vw;
+                left: -50px;
+            }
+
+            .categorias-container {
+                flex-direction: column;
+                padding: 0.5rem;
+            }
+
+            .columna {
+                min-width: auto;
+                padding: 0.5rem;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .columna:last-child {
+                border-bottom: none;
+            }
         }
 
         /* Breadcrumb mejorado */
@@ -878,38 +1363,405 @@ if (!empty($subcategoria)) {
         .product-card:nth-child(3) { animation-delay: 0.3s; }
         .product-card:nth-child(4) { animation-delay: 0.4s; }
         .product-card:nth-child(n+5) { animation-delay: 0.5s; }
+
+        /* Estilos para la vista previa del carrito */
+        .cart-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .cart-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .cart-count {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+            padding: 0.125rem 0.5rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .vista-previa-oculta {
+            display: none !important;
+        }
+
+        .vista-previa-carrito {
+            position: fixed;
+            width: 350px;
+            background: white !important;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            z-index: 3000;
+            overflow: hidden;
+            animation: slideUp 0.3s ease-out;
+            border: 1px solid var(--border-color);
+            top: 80px; /* Posición inicial, se ajustará con JS */
+            right: 20px; /* Posición inicial, se ajustará con JS */
+        }
+
+        .vista-previa-carrito.mostrar {
+            display: block !important;
+        }
+
+        .carrito-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .carrito-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .cerrar-vista-previa {
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+            transition: opacity 0.2s ease;
+        }
+
+        .cerrar-vista-previa:hover {
+            opacity: 0.7;
+        }
+
+        #productos-vista-previa {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .carrito-loading {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-medium);
+        }
+
+        .producto-preview {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .producto-preview:last-child {
+            border-bottom: none;
+        }
+
+        .producto-preview img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: var(--radius-md);
+        }
+
+        .producto-info h4 {
+            margin: 0 0 0.25rem 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .producto-info p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-medium);
+        }
+
+        .carrito-vacio {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-medium);
+        }
+
+        .carrito-error {
+            padding: 2rem;
+            text-align: center;
+            color: var(--error-color);
+        }
+
+        .carrito-footer {
+            padding: 1rem 1.5rem;
+            background: var(--background-light);
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .btn-ver-carrito {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-ver-carrito:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
     <!-- Header Principal -->
     <header class="header">
         <div class="header-content">
-            <a href="#" class="logo">
+            <a href="home.php" class="logo">
                 <span>Librería RL</span>
                 <span class="star">★</span>
             </a>
-            
+
             <div class="search-container">
                 <input type="text" class="search-input" placeholder="¿Qué estás buscando?" id="search-input">
                 <button class="search-btn" id="search-btn">🔍</button>
             </div>
-            
-            <div class="header-actions">
-                <a href="#" class="cart-btn">
-                    🛒 <span class="cart-count">3</span>
-                </a>
-            </div>
+
+            <!-- NAVEGACIÓN DEL USUARIO -->
+            <nav class="nav-links">
+                <?php if ($usuarioLogueado): ?>
+                    <!-- USUARIO LOGUEADO -->
+                    <div class="usuario-logueado">
+                        <!-- Info del usuario -->
+                        <div class="dropdown-usuario">
+                            <a href="#" class="usuario-info">
+                                👤 Hola, <?php echo htmlspecialchars($usuarioActual['Nombre'] ?? ($usuarioActual['usuario'] ?? 'Usuario')); ?>
+                                 <?php if ($esAdmin): ?>
+                                    <span style="color: #ffc107; font-weight: bold;">[ADMIN]</span>
+                                <?php endif; ?>
+                            </a>
+                            <div class="dropdown-usuario-content">
+                                <?php if ($esAdmin): ?>
+                                    <a href="admin_productos.php" style="background: #ffc107; color: #000; font-weight: bold;">🛠️ Panel Admin</a>
+                                    <hr style="margin: 5px 0; border: none; border-top: 1px solid #eee;">
+                                <?php endif; ?>
+                                <a href="#">Mi Perfil</a>
+                                <a href="#">Mis Pedidos</a>
+                                <a href="#" onclick="cerrarSesion()">🚪 Cerrar Sesión</a>
+                            </div>
+                        </div>
+
+                        <!-- Carrito al lado del usuario -->
+                        <div class="carrito-container">
+                            <a href="#" id="carrito-toggle" class="cart-btn">
+                                🛒 <span id="contador-carrito" class="cart-count"><?php echo $cantidadCarrito; ?></span>
+                            </a>
+                        </div>
+                    </div>
+
+                <?php else: ?>
+                    <!-- USUARIO NO LOGUEADO -->
+                    <div class="auth-container">
+                        <a href="#" id="login-toggle" class="auth-link">Iniciar Sesión</a>
+
+                        <!-- DROPDOWN DE AUTENTICACIÓN -->
+                        <div id="auth-dropdown" class="auth-dropdown-oculto">
+                            <!-- FORMULARIO DE LOGIN -->
+                            <div id="login-form" class="auth-form">
+                                <h3>Iniciar Sesión</h3>
+
+                                <form id="form-login" method="post">
+                                    <div class="form-group">
+                                        <input type="email"
+                                               id="login-email"
+                                               name="email"
+                                               placeholder="Correo electrónico"
+                                               required
+                                               autocomplete="email">
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="password"
+                                               id="login-password"
+                                               name="password"
+                                               placeholder="Contraseña"
+                                               required
+                                               autocomplete="current-password">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="checkbox-container">
+                                            <input type="checkbox" id="recordarme" name="recordarme" value="1">
+                                            <span>Recordarme</span>
+                                        </label>
+                                    </div>
+                                    <button type="submit" class="btn-auth">Iniciar Sesión</button>
+                                </form>
+
+                                <div class="auth-separator">
+                                    <span>¿No tienes cuenta?</span>
+                                    <a href="#" id="mostrar-registro">Regístrate aquí</a>
+                                </div>
+                            </div>
+
+                            <!-- FORMULARIO DE REGISTRO -->
+                            <div id="register-form" class="auth-form auth-form-oculto">
+                                <h3>Crear Cuenta</h3>
+
+                                <form id="form-registro" method="post">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <input type="text"
+                                                   id="registro-nombre"
+                                                   name="nombre"
+                                                   placeholder="Nombre completo"
+                                                   required
+                                                   autocomplete="name">
+                                        </div>
+                                        <div class="form-group">
+                                            <input type="email"
+                                                   id="registro-email"
+                                                   name="email"
+                                                   placeholder="Correo electrónico"
+                                                   required
+                                                   autocomplete="email">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="password"
+                                               id="registro-password"
+                                               name="password"
+                                               placeholder="Contraseña"
+                                               required
+                                               autocomplete="new-password">
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="password"
+                                               id="registro-confirm-password"
+                                               name="confirm_password"
+                                               placeholder="Confirmar contraseña"
+                                               required
+                                               autocomplete="new-password">
+                                    </div>
+                                    <button type="submit" class="btn-auth">Crear Cuenta</button>
+                                </form>
+
+                                <div class="auth-separator">
+                                    <span>¿Ya tienes cuenta?</span>
+                                    <a href="#" id="mostrar-login">Inicia sesión aquí</a>
+                                </div>
+                            </div>
+
+                            <!-- FORMULARIO DE VERIFICACIÓN -->
+                            <div id="verify-form" class="auth-form auth-form-oculto">
+                                <h3>Verificar Email</h3>
+                                <p>Te hemos enviado un código de verificación a tu email.</p>
+
+                                <form id="form-verificacion" method="post">
+                                    <div class="form-group">
+                                        <input type="text"
+                                               id="codigo-verificacion"
+                                               name="codigo"
+                                               placeholder="Código de verificación"
+                                               required
+                                               maxlength="6">
+                                    </div>
+                                    <button type="submit" class="btn-auth">Verificar</button>
+                                </form>
+
+                                <div class="auth-separator">
+                                    <a href="#" id="reenviar-codigo">¿No recibiste el código? Reenviar</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </nav>
         </div>
     </header>
 
-    <!-- Navegación Secundaria -->
+    <!-- Cart Preview (fuera del header para evitar estiramiento) -->
+    <div id="vista-previa-carrito" class="vista-previa-oculta">
+        <div class="carrito-header">
+            <h3>Mi Carrito</h3>
+            <span class="cerrar-vista-previa">&times;</span>
+        </div>
+        <div id="productos-vista-previa">
+            <div class="carrito-loading">
+                <p>Cargando carrito...</p>
+            </div>
+        </div>
+        <div class="carrito-footer">
+            <a href="vercarrito.php" class="btn-ver-carrito">Ver Carrito Completo</a>
+        </div>
+    </div>
+
+    <!-- Navegación Secundaria con Categorías Dinámicas -->
     <nav class="nav-secondary">
         <div class="nav-content">
-            <a href="#" class="nav-link">Inicio</a>
-            <a href="#" class="nav-link">Categorías</a>
-            <a href="#" class="nav-link">Ofertas</a>
-            <a href="#" class="nav-link">Sobre Nosotros</a>
-            <a href="#" class="nav-link">Contacto</a>
+            <a href="home.php" class="nav-link">INICIO</a>
+            <div class="dropdown">
+                <a href="#" class="nav-link" class="dropbtn">CATEGORÍAS ▼</a>
+                <div class="dropdown-content">
+                    <div class="categorias-container">
+                        <?php foreach ($categorias as $categoria => $subcategorias): ?>
+                            <div class="columna">
+                                <h4><?php echo htmlspecialchars($categoria); ?></h4>
+                                <ul>
+                                    <?php if (!empty($subcategorias)): ?>
+                                        <?php foreach ($subcategorias as $sub): ?>
+                                            <li>
+                                                <a href="productos.php?categoria=<?php echo urlencode($categoria); ?>&subcategoria=<?php echo urlencode($sub); ?>">
+                                                    <?php echo htmlspecialchars($sub); ?>
+                                                </a>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <li>
+                                            <a href="productos.php?categoria=<?php echo urlencode($categoria); ?>">
+                                                Ver <?php echo htmlspecialchars($categoria); ?>
+                                            </a>
+                                        </li>
+                                    <?php endif; ?>
+                                </ul>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+            <a href="#" class="nav-link">SOBRE NOSOTROS</a>
+            <a href="#" class="nav-link">CONTACTO</a>
         </div>
     </nav>
 
@@ -917,22 +1769,22 @@ if (!empty($subcategoria)) {
     <div class="breadcrumb">
         <ol class="breadcrumb-list">
             <li class="breadcrumb-item">
-                <a href="#" class="breadcrumb-link">Inicio</a>
+                <a href="home.php" class="breadcrumb-link">Inicio</a>
             </li>
             <li class="breadcrumb-separator">→</li>
             <li class="breadcrumb-item">
                 <a href="#" class="breadcrumb-link">Arte</a>
             </li>
             <li class="breadcrumb-separator">→</li>
-            <li class="breadcrumb-item">Acrílico Profesional</li>
+            <li class="breadcrumb-item"><?php echo $titulo_pagina; ?></li>
         </ol>
     </div>
 
     <!-- Header de Productos -->
     <div class="products-header">
         <div class="header-top">
-            <h1 class="page-title">Acrílico Profesional</h1>
-            <span class="results-count">24 productos encontrados</span>
+            <h1 class="page-title"><?php echo $titulo_pagina; ?></h1>
+            <span class="results-count"><?php echo count($productos_a_mostrar); ?> productos encontrados</span>
         </div>
         
         <div class="filters-bar">
@@ -955,123 +1807,64 @@ if (!empty($subcategoria)) {
     <!-- Contenedor de Productos -->
     <div class="products-container">
         <div class="products-grid" id="products-grid">
-            <!-- Productos de ejemplo -->
-            <article class="product-card" data-name="Acrílico Profesional Windsor & Newton" data-price="25.99" data-brand="Windsor & Newton">
-                <div class="product-image-container">
-                    <img src="https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=300&h=300&fit=crop&crop=center" alt="Acrílico Profesional Windsor & Newton" class="product-image">
-                    <div class="product-badge badge-new">Nuevo</div>
-                    <div class="product-actions">
-                        <button class="action-btn" title="Vista rápida">👁️</button>
-                        <button class="action-btn" title="Agregar a favoritos">♡</button>
-                    </div>
-                </div>
-                <div class="product-info">
-                    <div class="product-brand">Windsor & Newton</div>
-                    <h3 class="product-title">Acrílico Profesional Serie 1 - Set de 12 Colores</h3>
-                    <div class="product-price-container">
-                        <span class="product-price">$25.99</span>
-                        <span class="product-price-unit">c/u</span>
-                    </div>
-                    <button class="add-to-cart-btn" data-id="1">Agregar al Carrito</button>
-                </div>
-            </article>
-
-            <article class="product-card" data-name="Pincel Profesional Escoda" data-price="18.50" data-brand="Escoda">
-                <div class="product-image-container">
-                    <img src="https://images.unsplash.com/photo-1572729943322-7d2a5c8c8b1a?w=300&h=300&fit=crop&crop=center" alt="Pincel Profesional Escoda" class="product-image">
-                    <div class="product-badge badge-sale">Oferta</div>
-                    <div class="product-actions">
-                        <button class="action-btn" title="Vista rápida">👁️</button>
-                        <button class="action-btn" title="Agregar a favoritos">♡</button>
-                    </div>
-                </div>
-                <div class="product-info">
-                    <div class="product-brand">Escoda</div>
-                    <h3 class="product-title">Pincel Profesional Serie Versatil - Redondo N°8</h3>
-                    <div class="product-price-container">
-                        <span class="product-price">$18.50</span>
-                        <span class="product-price-unit">c/u</span>
-                    </div>
-                    <button class="add-to-cart-btn" data-id="2">Agregar al Carrito</button>
-                </div>
-            </article>
-
-            <article class="product-card" data-name="Lienzo Preparado Premium" data-price="32.00" data-brand="Arteza">
-                <div class="product-image-container">
-                    <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop&crop=center" alt="Lienzo Preparado Premium" class="product-image">
-                    <div class="product-actions">
-                        <button class="action-btn" title="Vista rápida">👁️</button>
-                        <button class="action-btn" title="Agregar a favoritos">♡</button>
-                    </div>
-                </div>
-                <div class="product-info">
-                    <div class="product-brand">Arteza</div>
-                    <h3 class="product-title">Lienzo Preparado Premium 40x50cm - Pack de 5</h3>
-                    <div class="product-price-container">
-                        <span class="product-price">$32.00</span>
-                        <span class="product-price-unit">pack</span>
-                    </div>
-                    <button class="add-to-cart-btn" data-id="3">Agregar al Carrito</button>
-                </div>
-            </article>
-
-            <article class="product-card" data-name="Paleta de Mezcla Profesional" data-price="12.75" data-brand="Arteza">
-                <div class="product-image-container">
-                    <img src="https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=300&h=300&fit=crop&crop=center" alt="Paleta de Mezcla" class="product-image">
-                    <div class="product-actions">
-                        <button class="action-btn" title="Vista rápida">👁️</button>
-                        <button class="action-btn" title="Agregar a favoritos">♡</button>
-                    </div>
-                </div>
-                <div class="product-info">
-                    <div class="product-brand">Arteza</div>
-                    <h3 class="product-title">Paleta de Mezcla Profesional - Vidrio Templado</h3>
-                    <div class="product-price-container">
-                        <span class="product-price">$12.75</span>
-                        <span class="product-price-unit">c/u</span>
-                    </div>
-                    <button class="add-to-cart-btn" data-id="4">Agregar al Carrito</button>
-                </div>
-            </article>
-
-            <article class="product-card" data-name="Médium Acrílico Profesional" data-price="15.99" data-brand="Golden">
-                <div class="product-image-container">
-                    <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop&crop=center" alt="Médium Acrílico" class="product-image">
-                    <div class="product-actions">
-                        <button class="action-btn" title="Vista rápida">👁️</button>
-                        <button class="action-btn" title="Agregar a favoritos">♡</button>
-                    </div>
-                </div>
-                <div class="product-info">
-                    <div class="product-brand">Golden</div>
-                    <h3 class="product-title">Médium Acrílico Profesional - Gel Brillante</h3>
-                    <div class="product-price-container">
-                        <span class="product-price">$15.99</span>
-                        <span class="product-price-unit">c/u</span>
-                    </div>
-                    <button class="add-to-cart-btn" data-id="5">Agregar al Carrito</button>
-                </div>
-            </article>
-
-            <article class="product-card" data-name="Papel Acuarela Profesional" data-price="22.50" data-brand="Canson">
-                <div class="product-image-container">
-                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=center" alt="Papel Acuarela" class="product-image">
-                    <div class="product-badge badge-new">Nuevo</div>
-                    <div class="product-actions">
-                        <button class="action-btn" title="Vista rápida">👁️</button>
-                        <button class="action-btn" title="Agregar a favoritos">♡</button>
-                    </div>
-                </div>
-                <div class="product-info">
-                    <div class="product-brand">Canson</div>
-                    <h3 class="product-title">Papel Acuarela Profesional 300g - Block A4</h3>
-                    <div class="product-price-container">
-                        <span class="product-price">$22.50</span>
-                        <span class="product-price-unit">block</span>
-                    </div>
-                    <button class="add-to-cart-btn" data-id="6">Agregar al Carrito</button>
-                </div>
-            </article>
+            <?php
+            if (!empty($productos_a_mostrar)) {
+                $contador = 0;
+                foreach ($productos_a_mostrar as $row) {
+                    $imgSrc = $row['ruta'] ? htmlspecialchars($row['ruta']) : "";
+                    $hasImage = !empty($row['ruta']);
+                    $badgeClass = '';
+                    $badgeText = '';
+                    if ($contador < 3) {
+                        $badgeClass = 'badge-new';
+                        $badgeText = 'Nuevo';
+                    } elseif ($row['Precio'] < 5) {
+                        $badgeClass = 'badge-sale';
+                        $badgeText = 'Oferta';
+                    }
+                    ?>
+                    <article class="product-card" 
+                             data-name="<?php echo htmlspecialchars($row['NomProducto']); ?>" 
+                             data-price="<?php echo $row['Precio']; ?>" 
+                             data-brand="<?php echo htmlspecialchars($row['Marca']); ?>">
+                        <div class="product-image-container <?php echo !$hasImage ? 'no-image' : ''; ?>">
+                            <?php if ($hasImage): ?>
+                                <img src="<?php echo $imgSrc; ?>" 
+                                     alt="<?php echo htmlspecialchars($row['NomProducto']); ?>" 
+                                     class="product-image" 
+                                     loading="lazy" 
+                                     onerror="this.style.display='none'; this.parentElement.classList.add('image-error');">
+                            <?php else: ?>
+                                <div class="no-image-placeholder">
+                                    <div class="no-image-icon">📷</div>
+                                    <div class="no-image-text">Sin imagen</div>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (!empty($badgeClass)): ?>
+                                <div class="product-badge <?php echo $badgeClass; ?>"><?php echo $badgeText; ?></div>
+                            <?php endif; ?>
+                            <div class="product-actions">
+                                <button class="action-btn" title="Vista rápida">👁️</button>
+                                <button class="action-btn" title="Agregar a favoritos">♡</button>
+                            </div>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-brand"><?php echo htmlspecialchars($row['Marca']); ?></div>
+                            <h3 class="product-title"><?php echo htmlspecialchars($row['NomProducto']); ?></h3>
+                            <div class="product-price-container">
+                                <span class="product-price">$<?php echo number_format($row['Precio'], 2); ?></span>
+                                <span class="product-price-unit">c/u</span>
+                            </div>
+                            <button class="add-to-cart-btn" data-id="<?php echo $row['IdProducto']; ?>">Agregar al Carrito</button>
+                        </div>
+                    </article>
+                    <?php
+                    $contador++;
+                }
+            } else {
+                echo '<p>No hay productos disponibles</p>';
+            }
+            ?>
         </div>
 
         <!-- Estado vacío (ejemplo, oculto por defecto) -->
@@ -1088,8 +1881,303 @@ if (!empty($subcategoria)) {
         </div>
     </div>
 
+    <!-- Contenedor para notificaciones flotantes -->
+    <div id="notificaciones-container" style="position: fixed; top: 20px; right: 20px; z-index: 10000; pointer-events: none;"></div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // ===================================================
+            // ELEMENTOS DEL DOM PARA AUTENTICACIÓN
+            // ===================================================
+            const loginToggle = document.getElementById('login-toggle');
+            const authDropdown = document.getElementById('auth-dropdown');
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const verifyForm = document.getElementById('verify-form');
+            const formLogin = document.getElementById('form-login');
+            const formRegistro = document.getElementById('form-registro');
+            const formVerificacion = document.getElementById('form-verificacion');
+            const mostrarRegistro = document.getElementById('mostrar-registro');
+            const mostrarLogin = document.getElementById('mostrar-login');
+            const reenviarCodigo = document.getElementById('reenviar-codigo');
+
+            let authOverlay = null;
+            let dropdownAbierto = false;
+
+            // ===================================================
+            // FUNCIONES DE AUTENTICACIÓN
+            // ===================================================
+
+            function crearAuthOverlay() {
+                if (!authOverlay) {
+                    authOverlay = document.createElement('div');
+                    authOverlay.className = 'auth-overlay';
+                    authOverlay.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0,0,0,0.3);
+                        z-index: 999;
+                        opacity: 0;
+                        visibility: hidden;
+                        transition: all 0.3s ease;
+                    `;
+                    authOverlay.addEventListener('click', cerrarDropdown);
+                    document.body.appendChild(authOverlay);
+                }
+                return authOverlay;
+            }
+
+            function abrirDropdown() {
+                if (authDropdown && !dropdownAbierto) {
+                    authDropdown.classList.remove('auth-dropdown-oculto');
+                    setTimeout(() => {
+                        authDropdown.classList.add('mostrar');
+                    }, 10);
+
+                    const overlay = crearAuthOverlay();
+                    overlay.style.opacity = '1';
+                    overlay.style.visibility = 'visible';
+                    dropdownAbierto = true;
+                }
+            }
+
+            function cerrarDropdown() {
+                if (authDropdown && dropdownAbierto) {
+                    authDropdown.classList.remove('mostrar');
+                    setTimeout(() => {
+                        authDropdown.classList.add('auth-dropdown-oculto');
+                    }, 300);
+
+                    if (authOverlay) {
+                        authOverlay.style.opacity = '0';
+                        authOverlay.style.visibility = 'hidden';
+                    }
+                    dropdownAbierto = false;
+                }
+            }
+
+            function mostrarFormulario(formulario) {
+                // Ocultar todos los formularios
+                if (loginForm) loginForm.classList.add('auth-form-oculto');
+                if (registerForm) registerForm.classList.add('auth-form-oculto');
+                if (verifyForm) verifyForm.classList.add('auth-form-oculto');
+
+                // Mostrar el formulario seleccionado
+                if (formulario) {
+                    formulario.classList.remove('auth-form-oculto');
+                }
+            }
+
+            function deshabilitarBoton(boton, texto = 'Procesando...') {
+                if (boton) {
+                    boton.disabled = true;
+                    boton.textContent = texto;
+                }
+            }
+
+            function habilitarBoton(boton, textoOriginal) {
+                if (boton) {
+                    boton.disabled = false;
+                    boton.textContent = textoOriginal;
+                }
+            }
+
+            function mostrarNotificacion(mensaje, tipo = 'success') {
+                const notificacionesContainer = document.getElementById('notificaciones-container');
+                if (!notificacionesContainer) return;
+
+                const notificacion = document.createElement('div');
+                notificacion.className = `toast ${tipo}`;
+                notificacion.innerHTML = `
+                    <div class="toast-header">
+                        <span class="toast-title">${tipo === 'success' ? 'Éxito' : tipo === 'error' ? 'Error' : 'Info'}</span>
+                        <button class="toast-close" onclick="this.parentElement.parentElement.remove()">&times;</button>
+                    </div>
+                    <div class="toast-message">${mensaje}</div>
+                `;
+
+                notificacionesContainer.appendChild(notificacion);
+
+                // Auto-remover después de 5 segundos
+                setTimeout(() => {
+                    if (notificacion.parentElement) {
+                        notificacion.remove();
+                    }
+                }, 5000);
+            }
+
+            function cerrarSesion() {
+                fetch('logout_proceso.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'cerrar_sesion=1'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exito) {
+                        mostrarNotificacion('Sesión cerrada correctamente', 'success');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        mostrarNotificacion(data.mensaje || 'Error al cerrar sesión', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarNotificacion('Error de conexión', 'error');
+                });
+            }
+
+            // ===================================================
+            // EVENT LISTENERS PARA AUTENTICACIÓN
+            // ===================================================
+
+            if (loginToggle) {
+                loginToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    abrirDropdown();
+                });
+            }
+
+            if (mostrarRegistro) {
+                mostrarRegistro.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    mostrarFormulario(registerForm);
+                });
+            }
+
+            if (mostrarLogin) {
+                mostrarLogin.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    mostrarFormulario(loginForm);
+                });
+            }
+
+            // LOGIN
+            if (formLogin) {
+                formLogin.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(this);
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    deshabilitarBoton(submitBtn, 'Iniciando sesión...');
+
+                    fetch('login_proceso.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exito) {
+                            mostrarNotificacion('¡Bienvenido!', 'success');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            mostrarNotificacion(data.mensaje || 'Error en el login', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        mostrarNotificacion('Error de conexión', 'error');
+                    })
+                    .finally(() => {
+                        habilitarBoton(submitBtn, 'Iniciar Sesión');
+                    });
+                });
+            }
+
+            // REGISTRO
+            if (formRegistro) {
+                formRegistro.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(this);
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    deshabilitarBoton(submitBtn, 'Creando cuenta...');
+
+                    fetch('registro_proceso.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exito) {
+                            mostrarNotificacion('¡Registro exitoso! Verifica tu email.', 'success');
+                            mostrarFormulario(verifyForm);
+                        } else {
+                            mostrarNotificacion(data.mensaje || 'Error en el registro', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        mostrarNotificacion('Error de conexión', 'error');
+                    })
+                    .finally(() => {
+                        habilitarBoton(submitBtn, 'Crear Cuenta');
+                    });
+                });
+            }
+
+            // VERIFICACIÓN
+            if (formVerificacion) {
+                formVerificacion.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(this);
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    deshabilitarBoton(submitBtn, 'Verificando...');
+
+                    fetch('verificar_proceso.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.exito) {
+                            mostrarNotificacion('¡Email verificado! Ya puedes iniciar sesión.', 'success');
+                            setTimeout(() => {
+                                mostrarFormulario(loginForm);
+                            }, 2000);
+                        } else {
+                            mostrarNotificacion(data.mensaje || 'Código inválido', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        mostrarNotificacion('Error de conexión', 'error');
+                    })
+                    .finally(() => {
+                        habilitarBoton(submitBtn, 'Verificar');
+                    });
+                });
+            }
+
+            // REENVIAR CÓDIGO
+            if (reenviarCodigo) {
+                reenviarCodigo.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    mostrarNotificacion('Función de reenvío próximamente', 'info');
+                });
+            }
+
+            // Cerrar dropdown con Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && dropdownAbierto) {
+                    cerrarDropdown();
+                }
+            });
+
+            // ===================================================
+            // FUNCIONALIDAD EXISTENTE DEL CARRITO Y PRODUCTOS
+            // ===================================================
+
             // Elementos del DOM
             const searchInput = document.getElementById('search-input');
             const searchBtn = document.getElementById('search-btn');
@@ -1102,7 +2190,16 @@ if (!empty($subcategoria)) {
 
             // Variables
             let currentView = 'grid';
-            let cartCount = 3;
+            let cartCount = <?php echo $cantidadCarrito; ?>;
+            let carritoAbierto = false;
+            let carritoOverlay = null;
+
+            // Elementos del carrito
+            const carritoToggle = document.getElementById('carrito-toggle');
+            const vistaPrevia = document.getElementById('vista-previa-carrito');
+            const cerrarVistaPrevia = document.querySelector('.cerrar-vista-previa');
+            const productosVistaPrevia = document.getElementById('productos-vista-previa');
+            const contadorCarrito = document.getElementById('contador-carrito');
 
             // Funcionalidad de búsqueda
             function searchProducts() {
@@ -1180,30 +2277,174 @@ if (!empty($subcategoria)) {
                 }
             }
 
-            // Agregar al carrito
+            // Funciones para la vista previa del carrito
+            function cargarVistaPrevia() {
+                if (!productosVistaPrevia) return;
+                
+                productosVistaPrevia.innerHTML = '<div class="carrito-loading"><p>Cargando carrito...</p></div>';
+                
+                fetch('vistapreviacarrito.php', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        throw new Error(`Error parsing JSON: ${e.message}. Response: ${text.substring(0, 200)}`);
+                    }
+                })
+                .then(data => {
+                    if (productosVistaPrevia) {
+                        if (data.error) {
+                            productosVistaPrevia.innerHTML = `
+                                <div class="carrito-error">
+                                    <p>Error: ${data.mensaje}</p>
+                                </div>
+                            `;
+                            return;
+                        }
+                        if (data.productos && data.productos.length > 0) {
+                            let html = '';
+                            data.productos.forEach(producto => {
+                                html += `
+                                    <div class="producto-preview">
+                                        <img src="${producto.imagen}" alt="${producto.nombre}" onerror="this.src='img/no-image.png'">
+                                        <div class="producto-info">
+                                            <h4>${producto.nombre}</h4>
+                                            <p>Cantidad: ${producto.cantidad} - $${parseFloat(producto.precio).toFixed(2)}</p>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                            html += `
+                                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                                    <strong>Total: $${parseFloat(data.total).toFixed(2)}</strong>
+                                </div>
+                            `;
+                            productosVistaPrevia.innerHTML = html;
+                        } else {
+                            productosVistaPrevia.innerHTML = `
+                                <div class="carrito-vacio">
+                                    <p>Tu carrito está vacío</p>
+                                </div>
+                            `;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Vista previa - Error completo:', error);
+                    if (productosVistaPrevia) {
+                        productosVistaPrevia.innerHTML = `
+                            <div class="carrito-error">
+                                <p>Error al cargar el carrito</p>
+                            </div>
+                        `;
+                    }
+                });
+            }
+
+            function mostrarVistaPrevia() {
+                if (vistaPrevia && carritoToggle) {
+                    // Calcular la posición del botón del carrito
+                    const rect = carritoToggle.getBoundingClientRect();
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    
+                    // Posicionar el cart preview arriba del botón
+                    vistaPrevia.style.top = (rect.top + scrollTop - vistaPrevia.offsetHeight - 10) + 'px';
+                    vistaPrevia.style.left = (rect.right - vistaPrevia.offsetWidth) + 'px';
+                    
+                    vistaPrevia.classList.remove('vista-previa-oculta');
+                    setTimeout(() => vistaPrevia.classList.add('mostrar'), 10);
+                    carritoAbierto = true;
+                }
+            }
+
+            function ocultarVistaPrevia() {
+                if (vistaPrevia) {
+                    vistaPrevia.classList.remove('mostrar');
+                    setTimeout(() => vistaPrevia.classList.add('vista-previa-oculta'), 300);
+                    carritoAbierto = false;
+                }
+            }
+
+            // Recalcular posición al redimensionar la ventana
+            window.addEventListener('resize', function() {
+                if (carritoAbierto && vistaPrevia && carritoToggle) {
+                    const rect = carritoToggle.getBoundingClientRect();
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    
+                    vistaPrevia.style.top = (rect.top + scrollTop - vistaPrevia.offsetHeight - 10) + 'px';
+                    vistaPrevia.style.left = (rect.right - vistaPrevia.offsetWidth) + 'px';
+                }
+            });
             function addToCart(productId, btn) {
                 // Deshabilitar botón temporalmente
                 btn.disabled = true;
                 btn.textContent = 'Agregando...';
 
-                // Simular llamada AJAX
-                setTimeout(() => {
-                    cartCount++;
-                    updateCartCount();
-                    
-                    // Feedback visual
-                    btn.style.background = 'var(--success-color)';
-                    btn.textContent = '¡Agregado!';
-                    
-                    setTimeout(() => {
-                        btn.disabled = false;
-                        btn.style.background = '';
-                        btn.textContent = 'Agregar al Carrito';
-                    }, 1500);
+                fetch('carrito_ajax.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `id=${encodeURIComponent(productId)}&accion=agregar`
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        throw new Error(`Error parsing JSON: ${e.message}. Response: ${text.substring(0, 200)}`);
+                    }
+                })
+                .then(data => {
+                    btn.disabled = false;
+                    btn.textContent = 'Agregar al Carrito';
 
-                    // Mostrar notificación
-                    showNotification('Producto agregado al carrito', 'success');
-                }, 800);
+                    if (data.exito) {
+                        cartCount = data.cantidad_total;
+                        updateCartCount();
+                        
+                        // Feedback visual
+                        btn.style.background = 'var(--success-color)';
+                        btn.textContent = '¡Agregado!';
+                        
+                        setTimeout(() => {
+                            btn.style.background = '';
+                            btn.textContent = 'Agregar al Carrito';
+                        }, 1500);
+
+                        // Mostrar notificación
+                        showNotification(`"${data.nombre || 'Producto'}" agregado al carrito`, 'success');
+                        
+                        // Actualizar vista previa si está abierta
+                        if (carritoAbierto) {
+                            setTimeout(() => cargarVistaPrevia(), 500);
+                        }
+                    } else {
+                        showNotification('Error: ' + (data.mensaje || 'Error desconocido'), 'error');
+                    }
+                })
+                .catch(error => {
+                    btn.disabled = false;
+                    btn.textContent = 'Agregar al Carrito';
+                    showNotification('Error de conexión: ' + error.message, 'error');
+                });
             }
 
             // Actualizar contador del carrito
@@ -1279,6 +2520,39 @@ if (!empty($subcategoria)) {
             searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     searchProducts();
+                }
+            });
+
+            // Event listeners del carrito
+            if (carritoToggle) {
+                carritoToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (!carritoAbierto) {
+                        cargarVistaPrevia();
+                        mostrarVistaPrevia();
+                    } else {
+                        ocultarVistaPrevia();
+                    }
+                });
+            }
+
+            if (cerrarVistaPrevia) {
+                cerrarVistaPrevia.addEventListener('click', ocultarVistaPrevia);
+            }
+
+            // Cerrar con Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (carritoAbierto) {
+                        ocultarVistaPrevia();
+                    }
+                }
+            });
+
+            // Cerrar al hacer clic fuera
+            document.addEventListener('click', function(e) {
+                if (carritoAbierto && vistaPrevia && !vistaPrevia.contains(e.target) && !carritoToggle.contains(e.target)) {
+                    ocultarVistaPrevia();
                 }
             });
 

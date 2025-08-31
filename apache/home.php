@@ -154,6 +154,61 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
     <link rel="stylesheet" href="estilopruebas.css">
     <link rel="stylesheet" href="estilocarrito.css">
 
+    <style>
+        /* Estilos para el contador del carrito */
+        .cart-btn {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            color: white !important;
+            padding: 0.5rem 1rem !important;
+            border-radius: 50px !important;
+            text-decoration: none !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+            transition: all 0.3s ease !important;
+            backdrop-filter: blur(10px) !important;
+        }
+
+        .cart-btn:hover {
+            background: rgba(255, 255, 255, 0.15) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        .cart-count {
+            background: var(--secondary-color) !important;
+            color: var(--primary-color) !important;
+            padding: 0.125rem 0.5rem !important;
+            border-radius: 50px !important;
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
+            min-width: 20px !important;
+            text-align: center !important;
+            display: inline-block !important;
+        }
+
+        /* Animación para el contador del carrito */
+        @keyframes bounceIn {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Asegurar que los estilos del contador tengan máxima prioridad */
+        #carrito-toggle .cart-count {
+            background: var(--secondary-color) !important;
+            color: var(--primary-color) !important;
+            padding: 0.125rem 0.5rem !important;
+            border-radius: 50px !important;
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
+            min-width: 20px !important;
+            text-align: center !important;
+            display: inline-block !important;
+            line-height: 1 !important;
+        }
+    </style>
+
     <title>Librería RL - Inicio</title>
 </head>
 <body>
@@ -190,17 +245,16 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
                                 <a href="admin_productos.php" style="background: #ffc107; color: #000; font-weight: bold;">🛠️ Panel Admin</a>
                                 <hr style="margin: 5px 0; border: none; border-top: 1px solid #eee;">
                             <?php endif; ?>
-                        <div class="dropdown-usuario-content">
-                            <a href="#">Mi Perfil</a>
-                            <a href="#">Mis Pedidos</a>
-                            <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
+                            <a href="#">👤 Mi Perfil</a>
+                            <a href="vercarrito.php">📦 Mis Pedidos</a>
+                            <a href="#" onclick="cerrarSesion()">🚪 Cerrar Sesión</a>
                         </div>
                     </div>
                     
                     <!-- Carrito al lado del usuario -->
                     <div class="carrito-container">
-                        <a href="#" id="carrito-toggle" class="carrito-link">
-                            🛒 <span id="contador-carrito"><?php echo $cantidadCarrito; ?></span>
+                        <a href="#" id="carrito-toggle" class="cart-btn">
+                            🛒 <span id="contador-carrito" class="cart-count"><?php echo $cantidadCarrito; ?></span>
                         </a>
                         <div id="vista-previa-carrito" class="vista-previa-oculta">
                             <div class="carrito-header">
@@ -226,43 +280,44 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
                     
                     <!-- DROPDOWN DE AUTENTICACIÓN -->
                     <div id="auth-dropdown" class="auth-dropdown-oculto">
-                        <!-- FORMULARIO DE LOGIN -->
-                        <div id="login-form" class="auth-form">
-                            <h3>Iniciar Sesión</h3>
+                        <div class="auth-form-container">
+                            <button class="auth-close" onclick="cerrarDropdown()">&times;</button>
                             
-                            <form id="form-login" method="post">
-                                <div class="form-group">
-                                    <input type="email" 
-                                           id="login-email" 
-                                           name="email" 
-                                           placeholder="Correo electrónico" 
-                                           required
-                                           autocomplete="email">
+                            <!-- FORMULARIO DE LOGIN -->
+                            <div id="login-form" class="auth-form">
+                                <h3>Iniciar Sesión</h3>
+                                
+                                <form id="form-login" method="post">
+                                    <div class="form-group">
+                                        <input type="email" 
+                                               id="login-email" 
+                                               name="email" 
+                                               placeholder="Correo electrónico" 
+                                               required
+                                               autocomplete="email">
+                                    </div>
+                                    <div class="form-group">
+                                        <input type="password" 
+                                               id="login-password" 
+                                               name="password" 
+                                               placeholder="Contraseña" 
+                                               required
+                                               autocomplete="current-password">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="checkbox-container">
+                                            <input type="checkbox" id="recordarme" name="recordarme" value="1">
+                                            <span>Recordarme</span>
+                                        </label>
+                                    </div>
+                                    <button type="submit" class="btn-auth">Iniciar Sesión</button>
+                                </form>
+                                
+                                <div class="auth-separator">
+                                    <span>¿No tienes cuenta?</span>
+                                    <a href="#" id="mostrar-registro">Regístrate aquí</a>
                                 </div>
-                                <div class="form-group">
-                                    <input type="password" 
-                                           id="login-password" 
-                                           name="password" 
-                                           placeholder="Contraseña" 
-                                           required
-                                           autocomplete="current-password">
-                                </div>
-                                <div class="form-group">
-                                    <label class="checkbox-container">
-                                        <input type="checkbox" id="recordarme" name="recordarme" value="1">
-                                        <span>Recordarme</span>
-                                    </label>
-                                </div>
-                                <button type="submit" class="btn-auth">Iniciar Sesión</button>
-                            </form>
-                            
-                            <div class="auth-separator">
-                                <span>¿No tienes cuenta?</span>
-                                <a href="#" id="mostrar-registro">Regístrate aquí</a>
-                            </div>
-                        </div>
-
-                        <!-- FORMULARIO DE REGISTRO -->
+                            </div>                        <!-- FORMULARIO DE REGISTRO -->
                         <div id="register-form" class="auth-form auth-form-oculto">
                             <h3>Crear Cuenta</h3>
                             
@@ -359,6 +414,7 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
                                 <a href="#" id="reenviar-codigo">¿No recibiste el código? Reenviar</a>
                             </div>
                         </div>
+                        </div> <!-- Cierre de auth-form-container -->
                     </div>
                 </div>
             <?php endif; ?>
@@ -366,48 +422,54 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
     </div>
 </header>
 
-<nav class="menu-secundario">
-    <a href="#">INICIO</a>
-    <div class="dropdown">
-        <a href="#" class="dropbtn">CATEGORÍA ▼</a>
-        <div class="dropdown-content">
-            <div class="categorias-container">
-                <?php foreach ($categorias as $categoria => $subcategorias): ?>
-                    <div class="columna">
-                        <h4><?php echo htmlspecialchars($categoria); ?></h4>
-                        <ul>
-                            <?php if (!empty($subcategorias)): ?>
-                                <?php foreach ($subcategorias as $sub): ?>
-                                    <li>
-                                        <a href="productos.php?categoria=<?php echo urlencode($categoria); ?>&subcategoria=<?php echo urlencode($sub); ?>">
-                                            <?php echo htmlspecialchars($sub); ?>
-                                        </a>
-                                    </li>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <li>
-                                    <a href="productos.php?categoria=<?php echo urlencode($categoria); ?>">
-                                        Ver <?php echo htmlspecialchars($categoria); ?>
-                                    </a>
-                                </li>
-                            <?php endif; ?>
-                        </ul>
+    <!-- Navegación Secundaria con Categorías Dinámicas -->
+    <nav class="nav-secondary">
+        <div class="nav-content">
+            <a href="home.php" class="nav-link">INICIO</a>
+            <div class="dropdown">
+                <a href="#" class="nav-link dropbtn">CATEGORÍAS ▼</a>
+                <div class="dropdown-content">
+                    <div class="categorias-container">
+                        <?php foreach ($categorias as $categoria => $subcategorias): ?>
+                            <div class="columna">
+                                <h4><?php echo htmlspecialchars($categoria); ?></h4>
+                                <ul>
+                                    <?php if (!empty($subcategorias)): ?>
+                                        <?php foreach ($subcategorias as $sub): ?>
+                                            <li>
+                                                <a href="productos.php?categoria=<?php echo urlencode($categoria); ?>&subcategoria=<?php echo urlencode($sub); ?>">
+                                                    <?php echo htmlspecialchars($sub); ?>
+                                                </a>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <li>
+                                            <a href="productos.php?categoria=<?php echo urlencode($categoria); ?>">
+                                                Ver <?php echo htmlspecialchars($categoria); ?>
+                                            </a>
+                                        </li>
+                                    <?php endif; ?>
+                                </ul>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
-                <?php endforeach; ?>
+                </div>
             </div>
+            <a href="#" class="nav-link">SOBRE NOSOTROS</a>
+            <a href="#" class="nav-link">CONTACTO</a>
         </div>
-    </div>
-    <a href="#">SOBRE NOSOTROS</a>
-    <a href="#">CONTACTO</a>
-    <a href="#">TIENDA</a>
-</nav>
+    </nav>
 
-<nav class="breadcrumbs" aria-label="Ruta de navegación">
-    <ul>
-        <li><a href="/">Inicio</a></li>
-        <li>Productos</li>
-    </ul>
-</nav>
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <ol class="breadcrumb-list">
+            <li class="breadcrumb-item">
+                <a href="home.php" class="breadcrumb-link">Inicio</a>
+            </li>
+            <li class="breadcrumb-separator">→</li>
+            <li class="breadcrumb-item">Productos</li>
+        </ol>
+    </div>
 
 <main class="productos" role="main" aria-label="Lista de productos">
     <?php
@@ -419,38 +481,53 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
     if ($result && $result->num_rows > 0) {
         $contador = 0;
         while ($row = $result->fetch_assoc()) {
-            $imgSrc = $row['ruta'] ? htmlspecialchars($row['ruta']) : "img/no-image.png";
-            $clases_especiales = '';
-            if ($contador < 3) $clases_especiales .= ' nuevo';
-            if ($row['Precio'] < 5) $clases_especiales .= ' oferta';
-            if ($contador % 4 == 0) $clases_especiales .= ' popular';
+            $imgSrc = $row['ruta'] ? htmlspecialchars($row['ruta']) : "";
+            $hasImage = !empty($row['ruta']);
+            $badgeClass = '';
+            $badgeText = '';
+            if ($contador < 3) {
+                $badgeClass = 'badge-new';
+                $badgeText = 'Nuevo';
+            } elseif ($row['Precio'] < 5) {
+                $badgeClass = 'badge-sale';
+                $badgeText = 'Oferta';
+            }
             ?>
-            <article class="producto<?php echo $clases_especiales; ?>"
-                     data-id="<?php echo $row['IdProducto']; ?>"
-                     data-nombre="<?php echo htmlspecialchars($row['NomProducto']); ?>"
-                     data-precio="<?php echo $row['Precio']; ?>"
-                     data-marca="<?php echo htmlspecialchars($row['Marca']); ?>">
-                <!-- Vista rápida -->
-                <button class="quick-view tooltip" data-tooltip="Vista rápida" aria-label="Vista rápida del producto">👁️</button>
-                <a href="formularioproducto.php?id=<?php echo $row['IdProducto']; ?>"
-                   aria-label="Ver detalles de <?php echo htmlspecialchars($row['NomProducto']); ?>">
-                    <img src="<?php echo $imgSrc; ?>"
-                         alt="<?php echo htmlspecialchars($row['NomProducto']); ?>"
-                         loading="lazy"
-                         onerror="this.src='img/no-image.png'">
-                    <h3><?php echo htmlspecialchars($row['NomProducto']); ?></h3>
-                    <p>Precio: <strong>$<?php echo number_format($row['Precio'], 2); ?></strong></p>
-                    <p>Marca: <?php echo htmlspecialchars($row['Marca']); ?></p>
-                    <p>Precio Unitario: $<?php echo number_format($row['Precio_Unitario'], 2); ?></p>
-                </a>
-                <button class="btn-agregar-carrito tooltip"
-                        data-id="<?php echo $row['IdProducto']; ?>"
-                        data-nombre="<?php echo htmlspecialchars($row['NomProducto']); ?>"
-                        data-precio="<?php echo $row['Precio']; ?>"
-                        data-tooltip="Agregar al carrito"
-                        aria-label="Agregar <?php echo htmlspecialchars($row['NomProducto']); ?> al carrito">
-                    <span>Agregar al Carrito</span>
-                </button>
+            <article class="product-card" 
+                     data-id="<?php echo $row['IdProducto']; ?>" 
+                     data-name="<?php echo htmlspecialchars($row['NomProducto']); ?>" 
+                     data-price="<?php echo $row['Precio']; ?>" 
+                     data-brand="<?php echo htmlspecialchars($row['Marca']); ?>">
+                <div class="product-image-container <?php echo !$hasImage ? 'no-image' : ''; ?>">
+                    <?php if ($hasImage): ?>
+                        <img src="<?php echo $imgSrc; ?>" 
+                             alt="<?php echo htmlspecialchars($row['NomProducto']); ?>" 
+                             class="product-image" 
+                             loading="lazy" 
+                             onerror="this.style.display='none'; this.parentElement.classList.add('image-error');">
+                    <?php else: ?>
+                        <div class="no-image-placeholder">
+                            <div class="no-image-icon">📷</div>
+                            <div class="no-image-text">Sin imagen</div>
+                        </div>
+                    <?php endif; ?>
+                    <?php if (!empty($badgeClass)): ?>
+                        <div class="product-badge <?php echo $badgeClass; ?>"><?php echo $badgeText; ?></div>
+                    <?php endif; ?>
+                    <div class="product-actions">
+                        <button class="action-btn" title="Vista rápida">👁️</button>
+                        <button class="action-btn" title="Agregar a favoritos">♡</button>
+                    </div>
+                </div>
+                <div class="product-info">
+                    <div class="product-brand"><?php echo htmlspecialchars($row['Marca']); ?></div>
+                    <h3 class="product-title"><?php echo htmlspecialchars($row['NomProducto']); ?></h3>
+                    <div class="product-price-container">
+                        <span class="product-price">$<?php echo number_format($row['Precio'], 2); ?></span>
+                        <span class="product-price-unit">c/u</span>
+                    </div>
+                    <button class="add-to-cart-btn" data-id="<?php echo $row['IdProducto']; ?>">Agregar al Carrito</button>
+                </div>
             </article>
             <?php
             $contador++;
@@ -493,7 +570,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const mostrarLogin = document.getElementById('mostrar-login');
     
     // Carrito
-    const botonesAgregar = document.querySelectorAll('.btn-agregar-carrito');
+    const botonesAgregar = document.querySelectorAll('.add-to-cart-btn');
     const contadorCarrito = document.getElementById('contador-carrito');
     const carritoToggle = document.getElementById('carrito-toggle');
     const vistaPrevia = document.getElementById('vista-previa-carrito');
@@ -542,6 +619,9 @@ document.addEventListener('DOMContentLoaded', function() {
             overlay.style.opacity = '1';
             overlay.style.visibility = 'visible';
             dropdownAbierto = true;
+            
+            // Mostrar formulario de login por defecto
+            mostrarFormulario(loginForm);
         }
     }
     
@@ -563,11 +643,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function mostrarFormulario(formularioMostrar) {
         const formularios = [loginForm, registerForm, verifyForm];
         formularios.forEach(form => {
-            if (form) form.classList.add('auth-form-oculto');
+            if (form) {
+                form.classList.add('auth-form-oculto');
+                form.classList.remove('active');
+            }
         });
         
         if (formularioMostrar) {
             formularioMostrar.classList.remove('auth-form-oculto');
+            formularioMostrar.classList.add('active');
         }
     }
     
@@ -730,6 +814,11 @@ document.addEventListener('DOMContentLoaded', function() {
             mostrarFormulario(loginForm);
         });
     }
+    
+    // Hacer funciones globales para el botón de cerrar
+    window.cerrarDropdown = cerrarDropdown;
+    window.abrirDropdown = abrirDropdown;
+    window.mostrarFormulario = mostrarFormulario;
     
     // Formularios de autenticación
     if (formLogin) {
@@ -909,12 +998,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.productos && data.productos.length > 0) {
                     let html = '';
                     data.productos.forEach(producto => {
+                        const hasImage = producto.imagen && producto.imagen !== 'img/no-image.png';
                         html += `
                             <div class="producto-preview">
-                                <img src="${producto.imagen}" alt="${producto.nombre}" onerror="this.src='img/no-image.png'">
+                                ${hasImage ? 
+                                    `<img src="${producto.imagen}" alt="${producto.nombre}" onerror="this.style.display='none'; this.parentElement.classList.add('image-error');">` :
+                                    `<div class="no-image-preview">
+                                        <div class="no-image-icon">📷</div>
+                                    </div>`
+                                }
                                 <div class="producto-info">
                                     <h4>${producto.nombre}</h4>
-                                    <p>Cantidad: ${producto.cantidad} - ${parseFloat(producto.precio).toFixed(2)}</p>
+                                    <p>Cantidad: ${producto.cantidad} - $${parseFloat(producto.precio).toFixed(2)}</p>
                                 </div>
                             </div>
                         `;
@@ -950,9 +1045,12 @@ document.addEventListener('DOMContentLoaded', function() {
     botonesAgregar.forEach(boton => {
         boton.addEventListener('click', function(e) {
             e.preventDefault();
-            const productoId = this.getAttribute('data-id');
-            const productoNombre = this.getAttribute('data-nombre');
-            const productoPrecio = this.getAttribute('data-precio');
+            
+            // Obtener datos del producto desde el elemento padre (product-card)
+            const productCard = this.closest('.product-card');
+            const productoId = productCard.getAttribute('data-id') || productCard.getAttribute('data-name');
+            const productoNombre = productCard.getAttribute('data-name');
+            const productoPrecio = productCard.getAttribute('data-price');
             
             if (!productoId || !productoNombre || !productoPrecio) {
                 mostrarNotificacion('Error: Datos del producto incompletos', 'error');
@@ -1129,6 +1227,58 @@ styleNotificaciones.textContent = `
     }
 `;
 document.head.appendChild(styleNotificaciones);
+
+// ===================================================
+// SISTEMA DE DROPDOWN DE CATEGORÍAS (MEJORADO)
+// ===================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    const dropdown = document.querySelector('.dropdown');
+    const dropdownContent = document.querySelector('.dropdown-content');
+    
+    if (dropdown && dropdownContent) {
+        let timeoutId;
+        
+        // Función para mostrar el dropdown
+        function mostrarDropdown() {
+            clearTimeout(timeoutId);
+            dropdownContent.style.display = 'block';
+            dropdownContent.style.opacity = '1';
+            dropdownContent.style.transform = 'translateX(-50%) translateY(0)';
+        }
+        
+        // Función para ocultar el dropdown
+        function ocultarDropdown() {
+            timeoutId = setTimeout(() => {
+                dropdownContent.style.opacity = '0';
+                dropdownContent.style.transform = 'translateX(-50%) translateY(-10px)';
+                setTimeout(() => {
+                    dropdownContent.style.display = 'none';
+                }, 300);
+            }, 150); // Pequeño delay para evitar flickering
+        }
+        
+        // Eventos del dropdown
+        dropdown.addEventListener('mouseenter', mostrarDropdown);
+        dropdown.addEventListener('mouseleave', ocultarDropdown);
+        
+        // Mantener visible cuando el mouse está sobre el contenido
+        dropdownContent.addEventListener('mouseenter', mostrarDropdown);
+        dropdownContent.addEventListener('mouseleave', ocultarDropdown);
+        
+        // Cerrar dropdown al hacer click fuera
+        document.addEventListener('click', function(e) {
+            if (!dropdown.contains(e.target)) {
+                ocultarDropdown();
+            }
+        });
+        
+        // Prevenir que el click en el dropdown lo cierre
+        dropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+});
 </script>
 </body>
 </html>
