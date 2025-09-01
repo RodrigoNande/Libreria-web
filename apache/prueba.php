@@ -770,6 +770,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.exito) {
                     mostrarNotificacion('¡Login exitoso! Recargando página...', 'exito');
+                    // Cerrar el modal antes de recargar
+                    cerrarDropdown();
                     setTimeout(() => {
                         window.location.reload();
                     }, 1500);

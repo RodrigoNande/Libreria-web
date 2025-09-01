@@ -1414,7 +1414,7 @@ if (empty($categoria) && empty($subcategoria)) {
             right: 20px; /* Posición inicial, se ajustará con JS */
         }
 
-        .vista-previa-carrito.mostrar {
+    .vista-previa-carrito.mostrar {
             display: block !important;
         }
 
@@ -2076,6 +2076,8 @@ if (empty($categoria) && empty($subcategoria)) {
                     .then(data => {
                         if (data.exito) {
                             mostrarNotificacion('¡Bienvenido!', 'success');
+                            // Cerrar el modal antes de recargar
+                            cerrarDropdown();
                             setTimeout(() => {
                                 window.location.reload();
                             }, 1000);

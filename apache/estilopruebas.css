@@ -1224,47 +1224,58 @@ main.productos {
 }
 
 /* ===================================================
-   ESTILOS RESPONSIVE PARA DROPDOWN DE CATEGORÍAS
+   ESTILOS DEL ESTADO VACÍO
    =================================================== */
 
-@media (max-width: 768px) {
-    .dropdown-content {
-        min-width: 300px;
-        left: 50%;
-        transform: translateX(-50%);
-        max-width: 90vw;
-    }
-    
-    .categorias-container {
-        grid-template-columns: 1fr;
-        gap: 0.5rem;
-        padding: 1rem;
-    }
-    
-    .columna {
-        text-align: center;
-    }
-    
-    .columna h4 {
-        font-size: 0.9rem;
-    }
-    
-    .columna a {
-        font-size: 0.8rem;
-    }
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin: 2rem auto;
+    max-width: 600px;
 }
 
-@media (max-width: 480px) {
-    .dropdown-content {
-        min-width: 250px;
-        left: 50%;
-        transform: translateX(-50%);
-        max-width: 95vw;
-    }
-    
-    .categorias-container {
-        padding: 0.5rem;
-    }
+.empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state h2 {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: var(--text-medium);
+    margin-bottom: 2rem;
+}
+
+.suggestions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.suggestion-link {
+    padding: 1rem;
+    background: var(--background-light);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: var(--primary-color);
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.suggestion-link:hover {
+    background: var(--secondary-color);
+    color: white;
+    transform: translateY(-2px);
 }
 
 /* ===================================================

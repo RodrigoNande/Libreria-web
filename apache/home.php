@@ -223,8 +223,8 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
         </div>
         
         <div class="search-container">
-            <input type="text" placeholder="¿Qué estás buscando?">
-            <button class="search-button">🔍</button>
+            <input type="text" placeholder="¿Qué estás buscando?" id="search-input">
+            <button class="search-button" id="search-btn">🔍</button>
         </div>
         
         <!-- NAVEGACIÓN CORREGIDA -->
@@ -471,6 +471,14 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
         </ol>
     </div>
 
+    <!-- Header de Productos -->
+    <div class="products-header">
+        <div class="header-top">
+            <h1 class="page-title">Nuestros Productos</h1>
+            <span class="results-count"><?php echo $result->num_rows ?? 0; ?> productos encontrados</span>
+        </div>
+    </div>
+
 <main class="productos" role="main" aria-label="Lista de productos">
     <?php
     $sql = "SELECT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, a.Precio, a.Precio_Unitario, i.ruta
@@ -536,6 +544,19 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
         echo "<p>No hay productos disponibles</p>";
     }
     ?>
+
+    <!-- Estado vacío (oculto por defecto) -->
+    <div class="empty-state" id="empty-state" style="display: none;">
+        <div class="empty-state-icon">🔍</div>
+        <h2>No se encontraron productos</h2>
+        <p>No hay productos que coincidan con tu búsqueda.</p>
+        <div class="suggestions-grid">
+            <a href="productos.php?categoria=ARTE" class="suggestion-link">Productos de Arte</a>
+            <a href="productos.php?categoria=ESCOLAR" class="suggestion-link">Artículos Escolares</a>
+            <a href="productos.php?categoria=OFICINA" class="suggestion-link">Productos de Oficina</a>
+            <a href="home.php" class="suggestion-link">Ver todos los productos</a>
+        </div>
+    </div>
 </main>
 
 <nav class="paginacion" aria-label="Navegación de páginas">
@@ -568,7 +589,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const formVerificacion = document.getElementById('form-verificacion');
     const mostrarRegistro = document.getElementById('mostrar-registro');
     const mostrarLogin = document.getElementById('mostrar-login');
-    
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+
+    // Productos
+    const productCards = document.querySelectorAll('.product-card');
+    const productsGrid = document.querySelector('.products-grid');
+    const emptyState = document.getElementById('empty-state');
+    const resultsCount = document.querySelector('.results-count');
+
     // Carrito
     const botonesAgregar = document.querySelectorAll('.add-to-cart-btn');
     const contadorCarrito = document.getElementById('contador-carrito');
@@ -585,7 +614,35 @@ document.addEventListener('DOMContentLoaded', function() {
     // ===================================================
     // SISTEMA DE AUTENTICACIÓN (MEJORADO)
     // ===================================================
-    
+    function searchProducts() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                let visibleCount = 0;
+
+                productCards.forEach(card => {
+                    const name = card.dataset.name.toLowerCase();
+                    const brand = card.dataset.brand.toLowerCase();
+                    
+                    if (name.includes(searchTerm) || brand.includes(searchTerm) || searchTerm === '') {
+                        card.style.display = '';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Actualizar contador de resultados
+                const resultsCount = document.querySelector('.results-count');
+                resultsCount.textContent = `${visibleCount} productos encontrados`;
+
+                // Mostrar/ocultar estado vacío
+                if (visibleCount === 0) {
+                    productsGrid.style.display = 'none';
+                    emptyState.style.display = 'block';
+                } else {
+                    productsGrid.style.display = 'grid';
+                    emptyState.style.display = 'none';
+                }
+            }
     function crearAuthOverlay() {
         if (!authOverlay) {
             authOverlay = document.createElement('div');
@@ -626,17 +683,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function cerrarDropdown() {
-        if (authDropdown && dropdownAbierto) {
+        console.log('Ejecutando cerrarDropdown, dropdownAbierto:', dropdownAbierto);
+        if (authDropdown) {
             authDropdown.classList.remove('mostrar');
             setTimeout(() => {
                 authDropdown.classList.add('auth-dropdown-oculto');
+                console.log('Dropdown cerrado');
             }, 300);
-            
+
             if (authOverlay) {
                 authOverlay.style.opacity = '0';
                 authOverlay.style.visibility = 'hidden';
             }
             dropdownAbierto = false;
+        } else {
+            console.log('authDropdown no encontrado');
         }
     }
     
@@ -849,19 +910,25 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
-                 if (data.exito) {
-                        if (data.es_admin) {
-            mostrarNotificacion('¡Bienvenido Administrador! Acceso completo al sistema', 'exito');
-        }                      else {
-            mostrarNotificacion('¡Login exitoso! Recargando página...', 'exito');
-        }
-        setTimeout(() => {
-            window.location.reload();
-        }, 1500);
-    } else {
-        mostrarNotificacion(data.mensaje || 'Error en el login', 'error');
-    }
-})
+                console.log('Respuesta del servidor:', data);
+                if (data.exito) {
+                    console.log('Login exitoso, procediendo a cerrar dropdown...');
+                    if (data.es_admin) {
+                        mostrarNotificacion('¡Bienvenido Administrador! Acceso completo al sistema', 'exito');
+                    } else {
+                        mostrarNotificacion('¡Login exitoso! Recargando página...', 'exito');
+                    }
+                    // Cerrar dropdown inmediatamente
+                    cerrarDropdown();
+                    setTimeout(() => {
+                        console.log('Recargando página ahora...');
+                        window.location.reload();
+                    }, 500); // Reducido aún más
+                } else {
+                    console.log('Login fallido:', data.mensaje);
+                    mostrarNotificacion(data.mensaje || 'Error en el login', 'error');
+                }
+            })
             .catch(error => {
                 console.error('Error:', error);
                 mostrarNotificacion('Error de conexión', 'error');
@@ -1175,7 +1242,25 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cargar contador inicial
     cargarVistaPrevia();
     
-    console.log('Sistemas de autenticación y carrito inicializados correctamente');
+    // Event listeners para búsqueda
+    if (searchInput) {
+        searchInput.addEventListener('input', searchProducts);
+    }
+    
+    if (searchBtn) {
+        searchBtn.addEventListener('click', searchProducts);
+    }
+    
+    // Búsqueda con Enter
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchProducts();
+            }
+        });
+    }
+    
+    console.log('Sistemas de autenticación, carrito y búsqueda inicializados correctamente');
 });
 
 // === FUNCIÓN PARA CERRAR SESIÓN (GLOBAL) ===
