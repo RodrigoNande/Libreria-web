@@ -926,7 +926,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     }, 500); // Reducido aún más
                 } else {
                     console.log('Login fallido:', data.mensaje);
-                    mostrarNotificacion(data.mensaje || 'Error en el login', 'error');
+
+                    // Caso especial: email no verificado
+                    if (data.requiere_verificacion && data.email) {
+                        mostrarNotificacion('Debes verificar tu email antes de iniciar sesión', 'warning');
+
+                        // Cambiar al formulario de verificación
+                        document.getElementById('email-verificar').value = data.email;
+                        mostrarFormulario(verifyForm);
+
+                        // Ofrecer reenviar código automáticamente
+                        setTimeout(() => {
+                            if (confirm('¿Quieres que te reenviemos el código de verificación?')) {
+                                document.getElementById('reenviar-codigo').click();
+                            }
+                        }, 1000);
+                    } else {
+                        mostrarNotificacion(data.mensaje || 'Error en el login', 'error');
+                    }
                 }
             })
             .catch(error => {
@@ -963,9 +980,25 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.exito) {
                     document.getElementById('email-verificar').value = formData.get('correo');
-                    document.getElementById('codigo-temp').textContent = data.codigo;
+
+                    // Solo mostrar código temporal en desarrollo
+                    if (data.codigo && document.getElementById('codigo-temp')) {
+                        document.getElementById('codigo-temp').textContent = data.codigo;
+                    } else {
+                        // En producción, ocultar el elemento del código temporal
+                        const codigoTempElement = document.getElementById('codigo-temp');
+                        if (codigoTempElement) {
+                            codigoTempElement.parentElement.style.display = 'none';
+                        }
+                    }
+
                     mostrarFormulario(verifyForm);
-                    mostrarNotificacion('¡Registro exitoso! Verifica tu email.', 'exito');
+
+                    if (data.email_enviado) {
+                        mostrarNotificacion('¡Registro exitoso! Te enviamos un código de verificación a tu email.', 'exito');
+                    } else {
+                        mostrarNotificacion('¡Registro exitoso! Usa el código mostrado para verificar.', 'info');
+                    }
                 } else {
                     mostrarNotificacion(data.mensaje || 'Error en el registro', 'error');
                 }

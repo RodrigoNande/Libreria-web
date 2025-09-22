@@ -1,428 +1,476 @@
 <?php
-// auth.php - Funciones de Autenticación
+// auth.php - Sistema de autenticación con envío de emails
 require_once 'conexion.php';
-
-// ========================================
-// FUNCIONES DE REGISTRO Y VERIFICACIÓN
-// ========================================
+require_once 'email_servicio.php'; // Incluir el servicio de emails
 
 /**
- * Registrar nuevo usuario
+ * Registra un nuevo usuario con verificación por email
  */
 function registrarUsuario($datos) {
     global $conn;
     
-    $response = ['exito' => false, 'mensaje' => '', 'codigo' => null];
-    
     try {
-        // Validar campos requeridos
-        $campos_requeridos = ['nombre', 'apellido', 'correo', 'usuario', 'contrasena'];
-        foreach ($campos_requeridos as $campo) {
-            if (empty($datos[$campo])) {
-                $response['mensaje'] = "El campo $campo es requerido";
-                return $response;
-            }
+        // Validaciones básicas
+        if (empty($datos['nombre']) || empty($datos['apellido']) || empty($datos['correo']) || 
+            empty($datos['usuario']) || empty($datos['contrasena'])) {
+            return [
+                'exito' => false,
+                'mensaje' => 'Todos los campos obligatorios deben estar completos'
+            ];
         }
         
-        // Validar formato de email
+        // Validar email
         if (!filter_var($datos['correo'], FILTER_VALIDATE_EMAIL)) {
-            $response['mensaje'] = 'El formato del correo no es válido';
-            return $response;
+            return [
+                'exito' => false,
+                'mensaje' => 'El formato del correo electrónico no es válido'
+            ];
+        }
+        
+        // Validar contraseña
+        if (strlen($datos['contrasena']) < 6) {
+            return [
+                'exito' => false,
+                'mensaje' => 'La contraseña debe tener al menos 6 caracteres'
+            ];
         }
         
         // Verificar si el email ya existe
-        $stmt = $conn->prepare("SELECT IdUsuario FROM usuarios WHERE Correo = ?");
+        $stmt = $conn->prepare("SELECT IdUsuario FROM Usuario WHERE Correo = ?");
         $stmt->bind_param("s", $datos['correo']);
         $stmt->execute();
-        if ($stmt->get_result()->num_rows > 0) {
-            $response['mensaje'] = 'Este correo ya está registrado';
-            return $response;
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            return [
+                'exito' => false,
+                'mensaje' => 'Este correo electrónico ya está registrado'
+            ];
         }
         
         // Verificar si el usuario ya existe
-        $stmt = $conn->prepare("SELECT IdUsuario FROM usuarios WHERE Usuario = ?");
+        $stmt = $conn->prepare("SELECT IdUsuario FROM Usuario WHERE Usuario = ?");
         $stmt->bind_param("s", $datos['usuario']);
         $stmt->execute();
-        if ($stmt->get_result()->num_rows > 0) {
-            $response['mensaje'] = 'Este nombre de usuario ya está en uso';
-            return $response;
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            return [
+                'exito' => false,
+                'mensaje' => 'Este nombre de usuario ya está en uso'
+            ];
         }
         
-        // Generar ID único para el usuario
-        $idUsuario = generarIdUnico();
+        // Generar código de verificación
+        $codigo_verificacion = generarCodigoVerificacion(); // Descomenta esta línea
+        $expiracion_codigo = date('Y-m-d H:i:s', strtotime('+15 minutes')); // Expira en 15 minutos
         
-        // Hash de la contraseña
-        $hashContrasena = password_hash($datos['contrasena'], PASSWORD_DEFAULT);
+        // Hashear contraseña
+        $password_hash = password_hash($datos['contrasena'], PASSWORD_DEFAULT);
         
-        // Insertar usuario (sin verificar)
+        // Insertar usuario (sin verificar inicialmente)
         $stmt = $conn->prepare("
-            INSERT INTO usuarios (IdUsuario, Nombre, Apellido, Correo, Telefono, Direccion, Usuario, Contrasena, Rol, activo, fecha_registro) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'cliente', 1, NOW())
+            INSERT INTO Usuario (Nombre, Apellido, Usuario, Correo, Contrasena, Telefono, Direccion, 
+                               email_verificado, codigo_verificacion, codigo_expiracion, fecha_registro) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, NOW())
         ");
         
-        // Antes de bind_param, asigna a variables:
-        $nombre      = $datos['nombre'];
-        $apellido    = $datos['apellido'];
-        $correo      = $datos['correo'];
-        $telefono    = $datos['telefono'] ?? '';
-        $direccion   = $datos['direccion'] ?? '';
-        $usuario     = $datos['usuario'];
-        $contrasena  = $hashContrasena;
-
-        // Ahora usa solo variables en bind_param:
-        $stmt->bind_param("ssssssss", 
-            $idUsuario,
-            $nombre,
-            $apellido,
-            $correo,
-            $telefono,
-            $direccion,
-            $usuario,
-            $contrasena
+        $stmt->bind_param("sssssssss", 
+            $datos['nombre'],
+            $datos['apellido'], 
+            $datos['usuario'],
+            $datos['correo'],
+            $password_hash,
+            $datos['telefono'],
+            $datos['direccion'],
+            $codigo_verificacion,
+            $expiracion_codigo
         );
         
         if ($stmt->execute()) {
-            // Crear código de verificación
-            $codigo = generarCodigoVerificacion();
-            $token = bin2hex(random_bytes(32));
-            $expira = date('Y-m-d H:i:s', strtotime('+30 minutes'));
+            // Enviar código por email
+            $resultado_email = enviarCodigoVerificacion(
+                $datos['correo'], 
+                $datos['nombre'], 
+                $codigo_verificacion
+            );
             
-            // Guardar verificación
-            $stmt = $conn->prepare("
-                INSERT INTO email_verificaciones (email, token, codigo, expira_en) 
-                VALUES (?, ?, ?, ?)
-            ");
-            $stmt->bind_param("ssss", $datos['correo'], $token, $codigo, $expira);
-            $stmt->execute();
-            
-            $response['exito'] = true;
-            $response['mensaje'] = 'Usuario registrado. Revisa tu email para el código de verificación.';
-            $response['codigo'] = $codigo; // Para desarrollo - quitar en producción
-            $response['token'] = $token;
-            
+            if ($resultado_email['exito']) {
+                return [
+                    'exito' => true,
+                    'mensaje' => 'Usuario registrado correctamente. Te enviamos un código de verificación a tu email.',
+                    'codigo' => $codigo_verificacion, // Solo para desarrollo - quitar en producción
+                    'email_enviado' => true
+                ];
+            } else {
+                // Si falla el envío del email, eliminar el usuario registrado
+                $stmt_delete = $conn->prepare("DELETE FROM Usuario WHERE Correo = ?");
+                $stmt_delete->bind_param("s", $datos['correo']);
+                $stmt_delete->execute();
+                
+                return [
+                    'exito' => false,
+                    'mensaje' => 'Error al enviar el código de verificación: ' . $resultado_email['mensaje']
+                ];
+            }
         } else {
-            $response['mensaje'] = 'Error al registrar usuario';
+            return [
+                'exito' => false,
+                'mensaje' => 'Error al registrar usuario: ' . $conn->error
+            ];
         }
         
     } catch (Exception $e) {
-        $response['mensaje'] = 'Error del servidor: ' . $e->getMessage();
+        error_log("Error en registrarUsuario: " . $e->getMessage());
+        return [
+            'exito' => false,
+            'mensaje' => 'Error interno del servidor'
+        ];
     }
-    
-    return $response;
 }
 
 /**
- * Verificar código de email
+ * Verifica el email usando el código enviado
  */
 function verificarEmail($email, $codigo) {
     global $conn;
     
-    $response = ['exito' => false, 'mensaje' => ''];
-    
     try {
-        // Buscar verificación activa
+        // Buscar usuario con el código válido y no expirado
         $stmt = $conn->prepare("
-            SELECT id, intentos FROM email_verificaciones 
-            WHERE email = ? AND codigo = ? AND expira_en > NOW() AND verificado = 0
+            SELECT IdUsuario, Nombre 
+            FROM Usuario 
+            WHERE Correo = ? 
+            AND codigo_verificacion = ? 
+            AND codigo_expiracion > NOW() 
+            AND email_verificado = 0
         ");
+        
         $stmt->bind_param("ss", $email, $codigo);
         $stmt->execute();
         $result = $stmt->get_result();
         
-        if ($result->num_rows > 0) {
-            $verificacion = $result->fetch_assoc();
-            
-            // Marcar email como verificado
-            $stmt = $conn->prepare("UPDATE email_verificaciones SET verificado = 1 WHERE id = ?");
-            $stmt->bind_param("i", $verificacion['id']);
-            $stmt->execute();
-            
-            // Marcar usuario como verificado
-            $stmt = $conn->prepare("UPDATE usuarios SET email_verificado = 1 WHERE Correo = ?");
-            $stmt->bind_param("s", $email);
-            $stmt->execute();
-            
-            $response['exito'] = true;
-            $response['mensaje'] = 'Email verificado correctamente';
-            
+        if ($result->num_rows === 0) {
+            return [
+                'exito' => false,
+                'mensaje' => 'Código de verificación inválido o expirado'
+            ];
+        }
+        
+        $usuario = $result->fetch_assoc();
+        
+        // Verificar el email
+        $stmt_update = $conn->prepare("
+            UPDATE Usuario 
+            SET email_verificado = 1, 
+                codigo_verificacion = NULL, 
+                codigo_expiracion = NULL,
+                fecha_verificacion = NOW()
+            WHERE Correo = ?
+        ");
+        
+        $stmt_update->bind_param("s", $email);
+        
+        if ($stmt_update->execute()) {
+            return [
+                'exito' => true,
+                'mensaje' => 'Email verificado correctamente. Ya puedes iniciar sesión.'
+            ];
         } else {
-            // Incrementar intentos
-            $stmt = $conn->prepare("
-                UPDATE email_verificaciones 
-                SET intentos = intentos + 1 
-                WHERE email = ? AND expira_en > NOW() AND verificado = 0
-            ");
-            $stmt->bind_param("s", $email);
-            $stmt->execute();
-            
-            $response['mensaje'] = 'Código inválido o expirado';
+            return [
+                'exito' => false,
+                'mensaje' => 'Error al verificar el email'
+            ];
         }
         
     } catch (Exception $e) {
-        $response['mensaje'] = 'Error del servidor: ' . $e->getMessage();
+        error_log("Error en verificarEmail: " . $e->getMessage());
+        return [
+            'exito' => false,
+            'mensaje' => 'Error interno del servidor'
+        ];
     }
-    
-    return $response;
 }
 
-// ========================================
-// FUNCIONES DE LOGIN Y SESIÓN
-// ========================================
-
 /**
- * Login de usuario
+ * Reenvía el código de verificación
  */
-function loginUsuario($email, $contrasena, $recordar = false) {
+function reenviarCodigoVerificacion($email) {
     global $conn;
     
-    $response = ['exito' => false, 'mensaje' => '', 'usuario' => null, 'es_admin' => false];
-    
     try {
-        // Buscar usuario por email
+        // Verificar que el usuario existe y no está verificado
         $stmt = $conn->prepare("
-            SELECT IdUsuario, Nombre, Apellido, Usuario, Contrasena, email_verificado, activo, Rol 
-            FROM usuarios WHERE Correo = ?
+            SELECT IdUsuario, Nombre, email_verificado 
+            FROM Usuario 
+            WHERE Correo = ?
         ");
+        
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
         
-        if ($result->num_rows > 0) {
-            $usuario = $result->fetch_assoc();
+        if ($result->num_rows === 0) {
+            return [
+                'exito' => false,
+                'mensaje' => 'Usuario no encontrado'
+            ];
+        }
+        
+        $usuario = $result->fetch_assoc();
+        
+        if ($usuario['email_verificado'] == 1) {
+            return [
+                'exito' => false,
+                'mensaje' => 'Este email ya está verificado'
+            ];
+        }
+        
+        // Generar nuevo código
+        $nuevo_codigo = generarCodigoVerificacion();
+        $nueva_expiracion = date('Y-m-d H:i:s', strtotime('+15 minutes'));
+        
+        // Actualizar código
+        $stmt_update = $conn->prepare("
+            UPDATE Usuario 
+            SET codigo_verificacion = ?, 
+                codigo_expiracion = ?
+            WHERE Correo = ?
+        ");
+        
+        $stmt_update->bind_param("sss", $nuevo_codigo, $nueva_expiracion, $email);
+        
+        if ($stmt_update->execute()) {
+            // Enviar nuevo código
+            $resultado_email = enviarCodigoVerificacion($email, $usuario['Nombre'], $nuevo_codigo);
             
-            // Verificar contraseña
-            if (password_verify($contrasena, $usuario['Contrasena'])) {
-                
-                // Verificar que esté activo
-                if (!$usuario['activo']) {
-                    $response['mensaje'] = 'Cuenta desactivada';
-                    return $response;
-                }
-                
-                // Verificar email (opcional - puedes comentar esto para desarrollo)
-                if (!$usuario['email_verificado']) {
-                    $response['mensaje'] = 'Debes verificar tu email primero';
-                    return $response;
-                }
-                
-                // Crear sesión
-                session_regenerate_id(true);
-                $_SESSION['usuario_id'] = $usuario['IdUsuario'];
-                $_SESSION['usuario_nombre'] = $usuario['Nombre'];
-                $_SESSION['usuario_email'] = $email;
-                $_SESSION['usuario_rol'] = $usuario['Rol']; // NUEVO: Guardar rol en sesión
-                $_SESSION['login_time'] = time();
-                
-                // Actualizar último login
-                $stmt = $conn->prepare("UPDATE usuarios SET ultimo_login = NOW() WHERE IdUsuario = ?");
-                $stmt->bind_param("s", $usuario['IdUsuario']);
-                $stmt->execute();
-                
-                // Token "recordarme" si se solicitó
-                if ($recordar) {
-                    crearTokenRecordar($usuario['IdUsuario']);
-                }
-                
-                // Migrar carrito de sesión a BD
-                migrarCarritoSesionABD($usuario['IdUsuario']);
-                
-                $response['exito'] = true;
-                $response['mensaje'] = 'Login exitoso';
-                $response['es_admin'] = ($usuario['Rol'] === 'admin'); // NUEVO: Indicar si es admin
-                $response['usuario'] = [
-                    'id' => $usuario['IdUsuario'],
-                    'nombre' => $usuario['Nombre'],
-                    'apellido' => $usuario['Apellido'],
-                    'usuario' => $usuario['Usuario'],
-                    'rol' => $usuario['Rol'] // NUEVO: Incluir rol
+            if ($resultado_email['exito']) {
+                return [
+                    'exito' => true,
+                    'mensaje' => 'Nuevo código enviado a tu email',
+                    'codigo' => $nuevo_codigo // Solo para desarrollo
                 ];
-                
             } else {
-                $response['mensaje'] = 'Contraseña incorreta';
+                return [
+                    'exito' => false,
+                    'mensaje' => 'Error al enviar el nuevo código: ' . $resultado_email['mensaje']
+                ];
             }
         } else {
-            $response['mensaje'] = 'Usuario no encontrado';
+            return [
+                'exito' => false,
+                'mensaje' => 'Error al generar nuevo código'
+            ];
         }
         
     } catch (Exception $e) {
-        $response['mensaje'] = 'Error del servidor: ' . $e->getMessage();
+        error_log("Error en reenviarCodigoVerificacion: " . $e->getMessage());
+        return [
+            'exito' => false,
+            'mensaje' => 'Error interno del servidor'
+        ];
     }
-    
-    return $response;
 }
 
 /**
- * Verificar si usuario está logueado
+ * Login de usuario (solo usuarios verificados)
  */
-function estaLogueado() {
-    if (isset($_SESSION['usuario_id']) && !empty($_SESSION['usuario_id'])) {
-        return true;
-    }
-    
-    // Verificar token "recordarme"
-    if (isset($_COOKIE['recordar_token']) && isset($_COOKIE['recordar_selector'])) {
-        return verificarTokenRecordar($_COOKIE['recordar_selector'], $_COOKIE['recordar_token']);
-    }
-    
-    return false;
-}
-
-/**
- * Logout
- */
-function logout() {
+function loginUsuario($email, $password, $recordarme = false) {
     global $conn;
     
-    // Eliminar token "recordarme" si existe
-    if (isset($_COOKIE['recordar_selector'])) {
-        $stmt = $conn->prepare("DELETE FROM tokens_recordar WHERE selector = ?");
-        $stmt->bind_param("s", $_COOKIE['recordar_selector']);
+    try {
+        $stmt = $conn->prepare("
+            SELECT IdUsuario, Nombre, Apellido, Usuario, Correo, Contrasena, 
+                   Telefono, Direccion, email_verificado, Tipo_Usuario 
+            FROM Usuario 
+            WHERE Correo = ?
+        ");
+        
+        $stmt->bind_param("s", $email);
         $stmt->execute();
+        $result = $stmt->get_result();
         
-        setcookie('recordar_selector', '', time() - 3600, '/', '', false, true);
-        setcookie('recordar_token', '', time() - 3600, '/', '', false, true);
-    }
-    
-    // Limpiar sesión
-    session_destroy();
-    session_start(); // Reiniciar para mantener funcionalidad básica
-}
-
-// ========================================
-// FUNCIONES DE SOPORTE
-// ========================================
-
-/**
- * Crear token "recordarme"
- */
-function crearTokenRecordar($usuarioId) {
-    global $conn;
-    
-    $selector = bin2hex(random_bytes(16));
-    $token = bin2hex(random_bytes(32));
-    $hashedToken = password_hash($token, PASSWORD_DEFAULT);
-    $expira = date('Y-m-d H:i:s', strtotime('+30 days'));
-    
-    // Eliminar tokens anteriores del usuario
-    $stmt = $conn->prepare("DELETE FROM tokens_recordar WHERE usuario_id = ?");
-    $stmt->bind_param("s", $usuarioId);
-    $stmt->execute();
-    
-    // Insertar nuevo token
-    $stmt = $conn->prepare("
-        INSERT INTO tokens_recordar (usuario_id, selector, token, expira_en) 
-        VALUES (?, ?, ?, ?)
-    ");
-    $stmt->bind_param("ssss", $usuarioId, $selector, $hashedToken, $expira);
-    $stmt->execute();
-    
-    // Configurar cookies
-    setcookie('recordar_selector', $selector, strtotime('+30 days'), '/', '', false, true);
-    setcookie('recordar_token', $token, strtotime('+30 days'), '/', '', false, true);
-}
-
-/**
- * Verificar token "recordarme"
- */
-function verificarTokenRecordar($selector, $token) {
-    global $conn;
-    
-    $stmt = $conn->prepare("
-        SELECT tr.usuario_id, tr.token, u.Nombre, u.Correo 
-        FROM tokens_recordar tr
-        JOIN usuarios u ON tr.usuario_id = u.IdUsuario
-        WHERE tr.selector = ? AND tr.expira_en > NOW() AND tr.usado = 0 AND u.activo = 1
-    ");
-    $stmt->bind_param("s", $selector);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows > 0) {
-        $data = $result->fetch_assoc();
-        
-        if (password_verify($token, $data['token'])) {
-            // Regenerar sesión
-            session_regenerate_id(true);
-            $_SESSION['usuario_id'] = $data['usuario_id'];
-            $_SESSION['usuario_nombre'] = $data['Nombre'];
-            $_SESSION['usuario_email'] = $data['Correo'];
-            $_SESSION['login_time'] = time();
-            
-            // Crear nuevo token por seguridad
-            crearTokenRecordar($data['usuario_id']);
-            
-            return true;
-        }
-    }
-    
-    // Limpiar cookies inválidas
-    setcookie('recordar_selector', '', time() - 3600, '/', '', false, true);
-    setcookie('recordar_token', '', time() - 3600, '/', '', false, true);
-    
-    return false;
-}
-
-/**
- * Migrar carrito de sesión a base de datos
- */
-function migrarCarritoSesionABD($usuarioId) {
-    global $conn;
-    
-    if (isset($_SESSION['carrito']) && !empty($_SESSION['carrito'])) {
-        foreach ($_SESSION['carrito'] as $productoId => $cantidad) {
-            // Insertar o actualizar carrito en BD
-            $stmt = $conn->prepare("
-                INSERT INTO carrito_usuarios (usuario_id, producto_id, cantidad) 
-                VALUES (?, ?, ?) 
-                ON DUPLICATE KEY UPDATE cantidad = cantidad + VALUES(cantidad)
-            ");
-            $stmt->bind_param("ssi", $usuarioId, $productoId, $cantidad);
-            $stmt->execute();
+        if ($result->num_rows === 0) {
+            return [
+                'exito' => false,
+                'mensaje' => 'Credenciales incorrectas'
+            ];
         }
         
-        // Limpiar carrito de sesión
-        unset($_SESSION['carrito']);
+        $usuario = $result->fetch_assoc();
+        
+        // Verificar que el email esté verificado
+        if ($usuario['email_verificado'] != 1) {
+            return [
+                'exito' => false,
+                'mensaje' => 'Debes verificar tu email antes de iniciar sesión',
+                'requiere_verificacion' => true,
+                'email' => $email
+            ];
+        }
+        
+        // Verificar contraseña
+        if (password_verify($password, $usuario['Contrasena'])) {
+            // Iniciar sesión
+            $_SESSION['usuario_id'] = $usuario['IdUsuario'];
+            $_SESSION['usuario_nombre'] = $usuario['Nombre'];
+            $_SESSION['usuario_email'] = $usuario['Correo'];
+            $_SESSION['usuario_logueado'] = true;
+            
+            // Verificar si es admin
+            $es_admin = ($usuario['Tipo_Usuario'] === 'admin' || $usuario['Tipo_Usuario'] === 'administrador');
+            if ($es_admin) {
+                $_SESSION['usuario_admin'] = true;
+            }
+            
+            // Configurar "recordarme" si está activado
+            if ($recordarme) {
+                $token = bin2hex(random_bytes(32));
+                $expira = date('Y-m-d H:i:s', strtotime('+30 days'));
+                
+                // Guardar token en BD
+                $stmt_token = $conn->prepare("
+                    INSERT INTO tokens_recordar (usuario_id, token, expira) 
+                    VALUES (?, ?, ?) 
+                    ON DUPLICATE KEY UPDATE token = ?, expira = ?
+                ");
+                $stmt_token->bind_param("issss", $usuario['IdUsuario'], $token, $expira, $token, $expira);
+                $stmt_token->execute();
+                
+                // Crear cookie
+                setcookie('recordar_token', $token, time() + (30 * 24 * 60 * 60), '/', '', true, true);
+            }
+            
+            return [
+                'exito' => true,
+                'mensaje' => 'Login exitoso',
+                'usuario' => [
+                    'id' => $usuario['IdUsuario'],
+                    'nombre' => $usuario['Nombre'],
+                    'email' => $usuario['Correo']
+                ],
+                'es_admin' => $es_admin
+            ];
+        } else {
+            return [
+                'exito' => false,
+                'mensaje' => 'Credenciales incorrectas'
+            ];
+        }
+        
+    } catch (Exception $e) {
+        error_log("Error en loginUsuario: " . $e->getMessage());
+        return [
+            'exito' => false,
+            'mensaje' => 'Error interno del servidor'
+        ];
     }
 }
 
 /**
- * Generar ID único
- */
-function generarIdUnico() {
-    return 'USR_' . strtoupper(bin2hex(random_bytes(8))) . '_' . time();
-}
-
-/**
- * Generar código de verificación de 6 dígitos
+ * Genera un código de verificación de 6 dígitos
  */
 function generarCodigoVerificacion() {
-    return str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+    return sprintf("%06d", mt_rand(100000, 999999));
 }
 
 /**
- * Obtener información del usuario actual
+ * Verifica si el usuario está logueado
+ */
+function estaLogueado() {
+    return isset($_SESSION['usuario_logueado']) && $_SESSION['usuario_logueado'] === true;
+}
+
+/**
+ * Verifica si el usuario es administrador
+ */
+function esAdmin() {
+    return isset($_SESSION['usuario_admin']) && $_SESSION['usuario_admin'] === true;
+}
+
+/**
+ * Obtiene información del usuario actual
  */
 function obtenerUsuarioActual() {
-    global $conn;
-    
     if (!estaLogueado()) {
         return null;
     }
     
+    return [
+        'IdUsuario' => $_SESSION['usuario_id'] ?? null,
+        'Nombre' => $_SESSION['usuario_nombre'] ?? null,
+        'Correo' => $_SESSION['usuario_email'] ?? null
+    ];
+}
+
+/**
+ * Cierra la sesión del usuario
+ */
+function logout() {
+    // Eliminar cookie de recordar si existe
+    if (isset($_COOKIE['recordar_token'])) {
+        global $conn;
+        
+        $token = $_COOKIE['recordar_token'];
+        $stmt = $conn->prepare("DELETE FROM tokens_recordar WHERE token = ?");
+        $stmt->bind_param("s", $token);
+        $stmt->execute();
+        
+        setcookie('recordar_token', '', time() - 3600, '/', '', true, true);
+    }
+    
+    // Limpiar sesión
+    session_unset();
+    session_destroy();
+    
+    // Iniciar nueva sesión
+    session_start();
+}
+
+/**
+ * Verifica login automático usando token de "recordarme"
+ */
+function verificarLoginAutomatico() {
+    if (estaLogueado() || !isset($_COOKIE['recordar_token'])) {
+        return false;
+    }
+    
+    global $conn;
+    
+    $token = $_COOKIE['recordar_token'];
+    
     $stmt = $conn->prepare("
-        SELECT IdUsuario, Nombre, Apellido, Correo, Usuario, Telefono, Direccion 
-        FROM usuarios WHERE IdUsuario = ?
+        SELECT u.IdUsuario, u.Nombre, u.Correo, u.Tipo_Usuario
+        FROM tokens_recordar tr
+        JOIN Usuario u ON tr.usuario_id = u.IdUsuario
+        WHERE tr.token = ? AND tr.expira > NOW()
     ");
-    $stmt->bind_param("s", $_SESSION['usuario_id']);
+    
+    $stmt->bind_param("s", $token);
     $stmt->execute();
     $result = $stmt->get_result();
     
-    return $result->num_rows > 0 ? $result->fetch_assoc() : null;
+    if ($result->num_rows > 0) {
+        $usuario = $result->fetch_assoc();
+        
+        // Restaurar sesión
+        $_SESSION['usuario_id'] = $usuario['IdUsuario'];
+        $_SESSION['usuario_nombre'] = $usuario['Nombre'];
+        $_SESSION['usuario_email'] = $usuario['Correo'];
+        $_SESSION['usuario_logueado'] = true;
+        
+        if ($usuario['Tipo_Usuario'] === 'admin' || $usuario['Tipo_Usuario'] === 'administrador') {
+            $_SESSION['usuario_admin'] = true;
+        }
+        
+        return true;
+    }
+    
+    // Token inválido, eliminar cookie
+    setcookie('recordar_token', '', time() - 3600, '/', '', true, true);
+    return false;
 }
-/**
- * Verificar si el usuario actual es administrador
- */
-function esAdmin() {
-    return isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin';
-}
+
+// Verificar login automático al cargar el archivo
+verificarLoginAutomatico();
 ?>
