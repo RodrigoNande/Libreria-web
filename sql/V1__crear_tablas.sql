@@ -82,7 +82,7 @@ CREATE TABLE `producto_categoria` (
 --
 
 CREATE TABLE `usuarios` (
-  `IdUsuario` varchar(100) NOT NULL,
+  `IdUsuario` INT NOT NULL AUTO_INCREMENT,
   `Nombre` varchar(100) NOT NULL,
   `Apellido` varchar(100) NOT NULL,
   `Correo` varchar(100) NOT NULL,
@@ -101,7 +101,7 @@ CREATE TABLE `usuarios` (
 
 CREATE TABLE `ventas` (
   `IdVenta` varchar(100) NOT NULL,
-  `IdUsuario` varchar(100) NOT NULL,
+  `IdUsuario` INT NOT NULL,
   `Fecha` datetime NOT NULL,
   `Total` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

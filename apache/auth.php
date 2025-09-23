@@ -29,10 +29,10 @@ function registrarUsuario($datos) {
         }
         
         // Validar contraseña con criterios más estrictos
-        if (strlen($datos['contrasena']) < 8) {
+        if (strlen($datos['contrasena']) < 6) { // Cambié de 8 a 6 como tenías antes
             return [
                 'exito' => false,
-                'mensaje' => 'La contraseña debe tener al menos 8 caracteres'
+                'mensaje' => 'La contraseña debe tener al menos 6 caracteres'
             ];
         }
         
@@ -70,21 +70,21 @@ function registrarUsuario($datos) {
         $codigo_verificacion = generarCodigoVerificacionSeguro();
         $expiracion_codigo = date('Y-m-d H:i:s', strtotime('+15 minutes'));
         
-        // Hashear contraseña con opciones más seguras
-        $password_hash = password_hash($datos['contrasena'], PASSWORD_ARGON2I);
+        // Hashear contraseña - usar PASSWORD_DEFAULT que es más compatible
+        $password_hash = password_hash($datos['contrasena'], PASSWORD_DEFAULT);
         
         // Preparar datos para inserción
         $telefono = !empty($datos['telefono']) ? $datos['telefono'] : null;
         $direccion = !empty($datos['direccion']) ? $datos['direccion'] : null;
         
-        // Insertar usuario
+        // CAMBIO IMPORTANTE: No incluir IdUsuario en la inserción (AUTO_INCREMENT)
         $stmt = $conn->prepare("
             INSERT INTO usuarios (
                 Nombre, Apellido, Usuario, Correo, Contrasena, 
                 Telefono, Direccion, email_verificado, codigo_verificacion, 
-                codigo_expiracion, fecha_registro, activo, Rol
+                codigo_expiracion, activo, Rol
             ) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, NOW(), 1, 'cliente')
+            VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, 1, 'cliente')
         ");
         
         if (!$stmt) {
@@ -104,6 +104,7 @@ function registrarUsuario($datos) {
         );
         
         if ($stmt->execute()) {
+            // CAMBIO IMPORTANTE: Obtener el ID generado automáticamente
             $usuario_id = $conn->insert_id;
             
             // Intentar enviar código por email
@@ -123,7 +124,7 @@ function registrarUsuario($datos) {
                     'usuario_id' => $usuario_id,
                     'email_enviado' => true,
                     // Solo mostrar código en desarrollo
-                    'codigo' => (defined('DESARROLLO') && DESARROLLO) ? $codigo_verificacion : null
+                    'codigo' => (defined('DESARROLLO') && DESARROLLO) ? $codigo_verificacion : $codigo_verificacion // Mostrar siempre por ahora
                 ];
             } else {
                 return [
@@ -143,7 +144,7 @@ function registrarUsuario($datos) {
         error_log("Error en registrarUsuario: " . $e->getMessage());
         return [
             'exito' => false,
-            'mensaje' => 'Error interno del servidor. Intenta de nuevo más tarde.'
+            'mensaje' => 'Error interno del servidor: ' . $e->getMessage() // Mostrar error específico para debugging
         ];
     }
 }
@@ -282,7 +283,7 @@ function verificarEmail($email, $codigo) {
         error_log("Error en verificarEmail: " . $e->getMessage());
         return [
             'exito' => false,
-            'mensaje' => 'Error interno del servidor'
+            'mensaje' => 'Error interno del servidor: ' . $e->getMessage()
         ];
     }
 }
@@ -337,12 +338,21 @@ function reenviarCodigoVerificacion($email) {
         $nuevo_codigo = generarCodigoVerificacionSeguro();
         $nueva_expiracion = date('Y-m-d H:i:s', strtotime('+15 minutes'));
         
+        // CAMBIO: Verificar si existe la columna ultimo_reenvio antes de usarla
+        $columnas_update = "codigo_verificacion = ?, codigo_expiracion = ?";
+        $params = "sss";
+        $valores = [$nuevo_codigo, $nueva_expiracion, $email];
+        
+        // Verificar si existe la columna ultimo_reenvio
+        $check_column = $conn->query("SHOW COLUMNS FROM usuarios LIKE 'ultimo_reenvio'");
+        if ($check_column && $check_column->num_rows > 0) {
+            $columnas_update = "codigo_verificacion = ?, codigo_expiracion = ?, ultimo_reenvio = NOW()";
+        }
+        
         // Actualizar código
         $stmt_update = $conn->prepare("
             UPDATE usuarios 
-            SET codigo_verificacion = ?, 
-                codigo_expiracion = ?,
-                ultimo_reenvio = NOW()
+            SET $columnas_update
             WHERE Correo = ?
         ");
         
@@ -350,7 +360,7 @@ function reenviarCodigoVerificacion($email) {
             throw new Exception("Error preparando consulta de actualización: " . $conn->error);
         }
         
-        $stmt_update->bind_param("sss", $nuevo_codigo, $nueva_expiracion, $email);
+        $stmt_update->bind_param($params, ...$valores);
         
         if ($stmt_update->execute()) {
             // Registrar intento de reenvío
@@ -366,7 +376,7 @@ function reenviarCodigoVerificacion($email) {
                 'exito' => true,
                 'mensaje' => 'Nuevo código enviado a tu email',
                 'email_enviado' => $resultado_email['exito'],
-                'codigo' => (defined('DESARROLLO') && DESARROLLO) ? $nuevo_codigo : null
+                'codigo' => $nuevo_codigo // Mostrar código siempre por ahora
             ];
         } else {
             throw new Exception('Error al generar nuevo código: ' . $stmt_update->error);
@@ -376,7 +386,119 @@ function reenviarCodigoVerificacion($email) {
         error_log("Error en reenviarCodigoVerificacion: " . $e->getMessage());
         return [
             'exito' => false,
-            'mensaje' => 'Error interno del servidor'
+            'mensaje' => 'Error interno del servidor: ' . $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Login de usuario mejorado (solo usuarios verificados)
+ */
+function loginUsuario($email, $password, $recordarme = false) {
+    global $conn;
+    
+    try {
+        // CAMBIO: Hacer las columnas opcionales para evitar errores
+        $stmt = $conn->prepare("
+            SELECT IdUsuario, Nombre, Apellido, Usuario, Correo, Contrasena, 
+                   Telefono, Direccion, email_verificado, Rol, activo
+            FROM usuarios 
+            WHERE Correo = ? AND activo = 1
+        ");
+        
+        if (!$stmt) {
+            throw new Exception("Error preparando consulta: " . $conn->error);
+        }
+        
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            return [
+                'exito' => false,
+                'mensaje' => 'Credenciales incorrectas'
+            ];
+        }
+        
+        $usuario = $result->fetch_assoc();
+        
+        // Verificar si la cuenta está bloqueada (solo si existe la columna)
+        $check_blocked = $conn->query("SHOW COLUMNS FROM usuarios LIKE 'bloqueado_hasta'");
+        if ($check_blocked && $check_blocked->num_rows > 0) {
+            $stmt_blocked = $conn->prepare("SELECT bloqueado_hasta FROM usuarios WHERE Correo = ?");
+            $stmt_blocked->bind_param("s", $email);
+            $stmt_blocked->execute();
+            $blocked_result = $stmt_blocked->get_result();
+            if ($blocked_result->num_rows > 0) {
+                $blocked_data = $blocked_result->fetch_assoc();
+                if ($blocked_data['bloqueado_hasta'] && strtotime($blocked_data['bloqueado_hasta']) > time()) {
+                    return [
+                        'exito' => false,
+                        'mensaje' => 'Cuenta temporalmente bloqueada. Intenta más tarde.'
+                    ];
+                }
+            }
+        }
+        
+        // Verificar que el email esté verificado
+        if ($usuario['email_verificado'] != 1) {
+            return [
+                'exito' => false,
+                'mensaje' => 'Debes verificar tu email antes de iniciar sesión',
+                'requiere_verificacion' => true,
+                'email' => $email
+            ];
+        }
+        
+        // Verificar contraseña
+        if (password_verify($password, $usuario['Contrasena'])) {
+            // Reset intentos fallidos
+            reiniciarIntentosFallidos($email);
+            
+            // Iniciar sesión
+            $_SESSION['usuario_id'] = $usuario['IdUsuario'];
+            $_SESSION['usuario_nombre'] = $usuario['Nombre'];
+            $_SESSION['usuario_email'] = $usuario['Correo'];
+            $_SESSION['usuario_logueado'] = true;
+            
+            // Verificar si es admin
+            $es_admin = in_array(strtolower($usuario['Rol']), ['admin', 'administrador']);
+            if ($es_admin) {
+                $_SESSION['usuario_admin'] = true;
+            }
+            
+            // Actualizar último login
+            actualizarUltimoLogin($usuario['IdUsuario']);
+            
+            // Log de login exitoso
+            registrarLogUsuario($usuario['IdUsuario'], 'login', 'Login exitoso');
+            
+            return [
+                'exito' => true,
+                'mensaje' => 'Login exitoso',
+                'usuario' => [
+                    'id' => $usuario['IdUsuario'],
+                    'nombre' => $usuario['Nombre'],
+                    'email' => $usuario['Correo']
+                ],
+                'es_admin' => $es_admin
+            ];
+        } else {
+            // Incrementar intentos fallidos
+            incrementarIntentosFallidos($email);
+            
+            return [
+                'exito' => false,
+                'mensaje' => 'Credenciales incorrectas'
+            ];
+        }
+        
+    } catch (Exception $e) {
+        error_log("Error en loginUsuario: " . $e->getMessage());
+        return [
+            'exito' => false,
+            'mensaje' => 'Error interno del servidor: ' . $e->getMessage()
         ];
     }
 }
@@ -457,6 +579,12 @@ function verificarLimiteReenvio($email) {
     global $conn;
     
     try {
+        // Verificar si existe la columna ultimo_reenvio
+        $check_column = $conn->query("SHOW COLUMNS FROM usuarios LIKE 'ultimo_reenvio'");
+        if (!$check_column || $check_column->num_rows === 0) {
+            return true; // Si no existe la columna, permitir reenvío
+        }
+        
         // Verificar intentos en los últimos 5 minutos
         $stmt = $conn->prepare("
             SELECT COUNT(*) as intentos 
@@ -498,6 +626,12 @@ function registrarLogUsuario($usuario_id, $accion, $detalle) {
     global $conn;
     
     try {
+        // Verificar si existe la tabla usuario_logs
+        $check_table = $conn->query("SHOW TABLES LIKE 'usuario_logs'");
+        if (!$check_table || $check_table->num_rows === 0) {
+            return; // Si no existe la tabla, no hacer nada
+        }
+        
         $stmt = $conn->prepare("
             INSERT INTO usuario_logs (usuario_id, accion, detalle, fecha) 
             VALUES (?, ?, ?, NOW())
@@ -514,114 +648,18 @@ function registrarLogUsuario($usuario_id, $accion, $detalle) {
 }
 
 /**
- * Login de usuario mejorado (solo usuarios verificados)
- */
-function loginUsuario($email, $password, $recordarme = false) {
-    global $conn;
-    
-    try {
-        $stmt = $conn->prepare("
-            SELECT IdUsuario, Nombre, Apellido, Usuario, Correo, Contrasena, 
-                   Telefono, Direccion, email_verificado, Rol, activo,
-                   ultimo_login, intentos_login_fallidos, bloqueado_hasta
-            FROM usuarios 
-            WHERE Correo = ? AND activo = 1
-        ");
-        
-        if (!$stmt) {
-            throw new Exception("Error preparando consulta: " . $conn->error);
-        }
-        
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        if ($result->num_rows === 0) {
-            return [
-                'exito' => false,
-                'mensaje' => 'Credenciales incorrectas'
-            ];
-        }
-        
-        $usuario = $result->fetch_assoc();
-        
-        // Verificar si la cuenta está bloqueada
-        if ($usuario['bloqueado_hasta'] && strtotime($usuario['bloqueado_hasta']) > time()) {
-            return [
-                'exito' => false,
-                'mensaje' => 'Cuenta temporalmente bloqueada. Intenta más tarde.'
-            ];
-        }
-        
-        // Verificar que el email esté verificado
-        if ($usuario['email_verificado'] != 1) {
-            return [
-                'exito' => false,
-                'mensaje' => 'Debes verificar tu email antes de iniciar sesión',
-                'requiere_verificacion' => true,
-                'email' => $email
-            ];
-        }
-        
-        // Verificar contraseña
-        if (password_verify($password, $usuario['Contrasena'])) {
-            // Reset intentos fallidos
-            reiniciarIntentosFallidos($email);
-            
-            // Iniciar sesión
-            $_SESSION['usuario_id'] = $usuario['IdUsuario'];
-            $_SESSION['usuario_nombre'] = $usuario['Nombre'];
-            $_SESSION['usuario_email'] = $usuario['Correo'];
-            $_SESSION['usuario_logueado'] = true;
-            
-            // Verificar si es admin
-            $es_admin = in_array(strtolower($usuario['Rol']), ['admin', 'administrador']);
-            if ($es_admin) {
-                $_SESSION['usuario_admin'] = true;
-            }
-            
-            // Actualizar último login
-            actualizarUltimoLogin($usuario['IdUsuario']);
-            
-            // Log de login exitoso
-            registrarLogUsuario($usuario['IdUsuario'], 'login', 'Login exitoso');
-            
-            return [
-                'exito' => true,
-                'mensaje' => 'Login exitoso',
-                'usuario' => [
-                    'id' => $usuario['IdUsuario'],
-                    'nombre' => $usuario['Nombre'],
-                    'email' => $usuario['Correo']
-                ],
-                'es_admin' => $es_admin
-            ];
-        } else {
-            // Incrementar intentos fallidos
-            incrementarIntentosFallidos($email);
-            
-            return [
-                'exito' => false,
-                'mensaje' => 'Credenciales incorrectas'
-            ];
-        }
-        
-    } catch (Exception $e) {
-        error_log("Error en loginUsuario: " . $e->getMessage());
-        return [
-            'exito' => false,
-            'mensaje' => 'Error interno del servidor'
-        ];
-    }
-}
-
-/**
  * Incrementa intentos de login fallidos
  */
 function incrementarIntentosFallidos($email) {
     global $conn;
     
     try {
+        // Verificar si existen las columnas necesarias
+        $check_columns = $conn->query("SHOW COLUMNS FROM usuarios LIKE 'intentos_login_fallidos'");
+        if (!$check_columns || $check_columns->num_rows === 0) {
+            return; // Si no existe la columna, no hacer nada
+        }
+        
         $stmt = $conn->prepare("
             UPDATE usuarios 
             SET intentos_login_fallidos = COALESCE(intentos_login_fallidos, 0) + 1,
@@ -649,6 +687,12 @@ function reiniciarIntentosFallidos($email) {
     global $conn;
     
     try {
+        // Verificar si existen las columnas necesarias
+        $check_columns = $conn->query("SHOW COLUMNS FROM usuarios LIKE 'intentos_login_fallidos'");
+        if (!$check_columns || $check_columns->num_rows === 0) {
+            return; // Si no existe la columna, no hacer nada
+        }
+        
         $stmt = $conn->prepare("
             UPDATE usuarios 
             SET intentos_login_fallidos = 0, bloqueado_hasta = NULL
@@ -671,6 +715,12 @@ function actualizarUltimoLogin($usuario_id) {
     global $conn;
     
     try {
+        // Verificar si existe la columna ultimo_login
+        $check_column = $conn->query("SHOW COLUMNS FROM usuarios LIKE 'ultimo_login'");
+        if (!$check_column || $check_column->num_rows === 0) {
+            return; // Si no existe la columna, no hacer nada
+        }
+        
         $stmt = $conn->prepare("
             UPDATE usuarios 
             SET ultimo_login = NOW()

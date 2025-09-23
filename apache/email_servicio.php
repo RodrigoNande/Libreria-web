@@ -11,11 +11,11 @@ class EmailService {
     private $from_name;
     
     public function __construct() {
-        // Configuración SMTP - Gmail
-        $this->smtp_host = 'smtp.gmail.com';
-        $this->smtp_port = 587;
-        $this->smtp_username = 'rodricampos882@gmail.com';
-        $this->smtp_password = 'qrxx fqrb xinv ejmg'; // Tu contraseña de aplicación
+        // Configuración SMTP - Puedes usar Gmail, Outlook, o cualquier proveedor SMTP
+        $this->smtp_host = 'smtp.gmail.com'; // Para Gmail
+        $this->smtp_port = 587; // Puerto TLS
+        $this->smtp_username = 'rodricampos882@gmail.com'; // Tu email
+        $this->smtp_password = 'qrxx fqrb xinv ejmg'; // Contraseña de aplicación de Gmail
         $this->from_email = 'rodricampos882@gmail.com';
         $this->from_name = 'Librería RL';
     }
@@ -25,6 +25,7 @@ class EmailService {
      */
     public function enviarCodigoVerificacion($email, $nombre, $codigo) {
         $subject = 'Verificación de Email - Librería RL';
+        
         $html_body = $this->generarPlantillaVerificacion($nombre, $codigo);
         $text_body = "Hola $nombre,\n\nTu código de verificación es: $codigo\n\nEste código expira en 15 minutos.\n\nSi no solicitaste esta verificación, ignora este mensaje.\n\nSaludos,\nEquipo de Librería RL";
         
@@ -32,12 +33,12 @@ class EmailService {
     }
     
     /**
-     * Envía un email
+     * Envía un email usando PHPMailer
      */
     private function enviarEmail($to_email, $subject, $html_body, $text_body = '') {
         try {
-            // Intentar usar PHPMailer si está disponible
-            if ($this->phpmailerDisponible()) {
+            // Si tienes PHPMailer instalado (recomendado)
+            if (class_exists('PHPMailer\PHPMailer\PHPMailer')) {
                 return $this->enviarConPHPMailer($to_email, $subject, $html_body, $text_body);
             } else {
                 // Fallback usando la función mail() nativa de PHP
@@ -53,35 +54,15 @@ class EmailService {
     }
     
     /**
-     * Verifica si PHPMailer está disponible
-     */
-    private function phpmailerDisponible() {
-        // Verificar si PHPMailer está instalado con Composer
-        if (file_exists('vendor/autoload.php')) {
-            require_once 'vendor/autoload.php';
-            return class_exists('PHPMailer\PHPMailer\PHPMailer');
-        }
-        
-        // Verificar si PHPMailer está instalado manualmente
-        if (file_exists('PHPMailer/src/PHPMailer.php') && 
-            file_exists('PHPMailer/src/SMTP.php') && 
-            file_exists('PHPMailer/src/Exception.php')) {
-            
-            require_once 'PHPMailer/src/PHPMailer.php';
-            require_once 'PHPMailer/src/SMTP.php';
-            require_once 'PHPMailer/src/Exception.php';
-            
-            return class_exists('PHPMailer\PHPMailer\PHPMailer');
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Envía email usando PHPMailer
+     * Envía email usando PHPMailer (RECOMENDADO)
      */
     private function enviarConPHPMailer($to_email, $subject, $html_body, $text_body) {
-        // Cargar las clases de PHPMailer
+        require_once 'vendor/autoload.php'; // Si instalaste PHPMailer con Composer
+        // O si lo descargaste manualmente:
+        // require_once 'PHPMailer/src/PHPMailer.php';
+        // require_once 'PHPMailer/src/SMTP.php';
+        // require_once 'PHPMailer/src/Exception.php';
+        
         use PHPMailer\PHPMailer\PHPMailer;
         use PHPMailer\PHPMailer\SMTP;
         use PHPMailer\PHPMailer\Exception;
@@ -99,10 +80,6 @@ class EmailService {
             $mail->Port = $this->smtp_port;
             $mail->CharSet = 'UTF-8';
             
-            // Configuración adicional para debugging (comentar en producción)
-            // $mail->SMTPDebug = SMTP::DEBUG_SERVER;
-            // $mail->Debugoutput = 'html';
-            
             // Remitente
             $mail->setFrom($this->from_email, $this->from_name);
             
@@ -114,27 +91,19 @@ class EmailService {
             $mail->Subject = $subject;
             $mail->Body = $html_body;
             $mail->AltBody = $text_body;
-            
+            $mail->SMTPDebug = 2; // Muestra la depuración SMTP en pantalla
+            $mail->Debugoutput = 'error_log'; // Envía la depuración al log de errores de PHP
             $mail->send();
-            
-            // Log del email enviado (opcional)
-            $this->logEmail($to_email, 'verificacion', $subject, 'enviado');
             
             return [
                 'exito' => true,
-                'mensaje' => 'Email enviado correctamente con PHPMailer'
+                'mensaje' => 'Email enviado correctamente'
             ];
             
         } catch (Exception $e) {
-            // Log del error
-            $error_message = $mail->ErrorInfo;
-            $this->logEmail($to_email, 'verificacion', $subject, 'fallido', $error_message);
-            
-            error_log("Error enviando email a $to_email: " . $error_message);
-            
             return [
                 'exito' => false,
-                'mensaje' => 'Error al enviar email con PHPMailer: ' . $error_message
+                'mensaje' => 'Error al enviar email: ' . $mail->ErrorInfo
             ];
         }
     }
@@ -154,38 +123,15 @@ class EmailService {
         $headers_string = implode("\r\n", $headers);
         
         if (mail($to_email, $subject, $html_body, $headers_string)) {
-            $this->logEmail($to_email, 'verificacion', $subject, 'enviado');
             return [
                 'exito' => true,
-                'mensaje' => 'Email enviado correctamente con mail() nativo'
+                'mensaje' => 'Email enviado correctamente'
             ];
         } else {
-            $this->logEmail($to_email, 'verificacion', $subject, 'fallido', 'Error con mail() nativo');
             return [
                 'exito' => false,
-                'mensaje' => 'Error al enviar el email con mail() nativo'
+                'mensaje' => 'Error al enviar el email'
             ];
-        }
-    }
-    
-    /**
-     * Registra el email en la base de datos (opcional)
-     */
-    private function logEmail($email, $tipo, $asunto, $estado, $mensaje_error = null) {
-        global $conn;
-        
-        try {
-            $stmt = $conn->prepare("
-                INSERT INTO email_log (email_destino, tipo, asunto, estado, mensaje_error) 
-                VALUES (?, ?, ?, ?, ?)
-            ");
-            if ($stmt) {
-                $stmt->bind_param("sssss", $email, $tipo, $asunto, $estado, $mensaje_error);
-                $stmt->execute();
-            }
-        } catch (Exception $e) {
-            // Error logging no debe interrumpir el flujo principal
-            error_log("Error logging email: " . $e->getMessage());
         }
     }
     
@@ -199,52 +145,41 @@ class EmailService {
         <head>
             <meta charset='UTF-8'>
             <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-            <title>Verificación de Email - Librería RL</title>
+            <title>Verificación de Email</title>
             <style>
                 body {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                     line-height: 1.6;
                     color: #333;
                     max-width: 600px;
                     margin: 0 auto;
-                    background-color: #f8f9fa;
-                    padding: 20px;
+                    background-color: #f4f4f4;
                 }
                 .container {
                     background: white;
-                    border-radius: 12px;
+                    margin: 20px;
+                    border-radius: 10px;
                     overflow: hidden;
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                    box-shadow: 0 0 20px rgba(0,0,0,0.1);
                 }
                 .header {
                     background: linear-gradient(135deg, #120049, #4834d4);
                     color: white;
-                    padding: 40px 30px;
+                    padding: 30px;
                     text-align: center;
                 }
                 .header h1 {
                     margin: 0;
                     font-size: 28px;
-                    font-weight: 600;
-                }
-                .header p {
-                    margin: 10px 0 0 0;
-                    opacity: 0.9;
-                    font-size: 16px;
                 }
                 .content {
                     padding: 40px 30px;
                 }
-                .greeting {
-                    font-size: 18px;
-                    margin-bottom: 20px;
-                    color: #2c3e50;
-                }
                 .code-container {
-                    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+                    background: #f8f9fa;
                     border: 2px solid #4834d4;
-                    border-radius: 12px;
-                    padding: 30px;
+                    border-radius: 10px;
+                    padding: 20px;
                     text-align: center;
                     margin: 30px 0;
                 }
@@ -317,5 +252,13 @@ class EmailService {
         </html>
         ";
     }
+}
+
+/**
+ * Función helper para enviar código de verificación
+ */
+function enviarCodigoVerificacion($email, $nombre, $codigo) {
+    $emailService = new EmailService();
+    return $emailService->enviarCodigoVerificacion($email, $nombre, $codigo);
 }
 ?>
