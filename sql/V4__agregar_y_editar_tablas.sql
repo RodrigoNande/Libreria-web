@@ -62,3 +62,14 @@ ALTER TABLE usuarios ADD COLUMN email_verificado BOOLEAN DEFAULT FALSE;
 ALTER TABLE usuarios ADD COLUMN fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 ALTER TABLE usuarios ADD COLUMN ultimo_login TIMESTAMP NULL;
 ALTER TABLE usuarios ADD COLUMN activo BOOLEAN DEFAULT TRUE;
+
+
+ALTER TABLE usuarios ADD COLUMN ultimo_reenvio TIMESTAMP NULL;
+ALTER TABLE usuarios ADD COLUMN intentos_login_fallidos INT DEFAULT 0;
+ALTER TABLE usuarios ADD COLUMN bloqueado_hasta TIMESTAMP NULL;
+ALTER TABLE usuarios ADD COLUMN fecha_verificacion TIMESTAMP NULL;
+ALTER TABLE usuarios ADD COLUMN codigo_verificacion VARCHAR(100) NULL;
+ALTER TABLE usuarios ADD COLUMN codigo_expiracion TIMESTAMP NULL;
+
+
+

@@ -972,7 +972,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const submitBtn = this.querySelector('button[type="submit"]');
             deshabilitarBoton(submitBtn, 'Registrando...');
             
-            fetch('registro_proceso.php', {
+            fetch('registro_proceso_debug.php', {
                 method: 'POST',
                 body: formData
             })
