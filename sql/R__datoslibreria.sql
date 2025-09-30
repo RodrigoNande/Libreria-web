@@ -706,7 +706,7 @@ INSERT INTO usuarios (
     ultimo_login,
     activo
 ) VALUES (
-    'USR_ADMIN_001',
+    '',
     'Administrador',
     'Sistema',
     'hernandezrodri83@gmail.com',
@@ -720,4 +720,36 @@ INSERT INTO usuarios (
     NULL,
     1
 );
+
+
+INSERT INTO usuarios ( IdUsuario,
+    Nombre,
+    Apellido,
+    Correo,
+    Telefono,
+    Direccion,
+    Usuario,
+    Contrasena,
+    Rol,
+    email_verificado,
+    fecha_registro,
+    ultimo_login,
+    activo) 
+VALUES (
+    '1',
+    'Cliente',
+    'Prueba',
+    'rodricampos882gmail.com',
+    '75869450',
+    'sucasa',
+    'cliente',
+    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', -- cliente123
+    'cliente',
+    1,
+    NOW(),
+    NULL,
+    1
+    
+);
+
 

@@ -221,6 +221,8 @@ if (empty($categoria) && empty($subcategoria)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="css/estilos_unificados.css">
+<link rel="stylesheet" href="css/estilocarrito.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <title>Productos - Librería RL</title>
     <style>
@@ -1547,6 +1549,8 @@ if (empty($categoria) && empty($subcategoria)) {
     </style>
 </head>
 <body>
+    <script src="js/validaciones.js"></script>
+<script src="js/paginacion.js"></script>
     <!-- Header Principal -->
     <header class="header">
         <div class="header-content">
@@ -2600,6 +2604,20 @@ if (empty($categoria) && empty($subcategoria)) {
             }
         `;
         document.head.appendChild(style);
+        const loginValidator = new FormValidator('form-login', {
+    realTimeValidation: true,
+    scrollToError: true
+});
+
+loginValidator.addRules(CommonValidators.login);
+
+// Para registro
+const registerValidator = new FormValidator('form-registro');
+registerValidator.addRules(CommonValidators.register);
+
+// Para productos (admin)
+const productoValidator = new FormValidator('form-producto');
+productoValidator.addRules(CommonValidators.producto);
     </script>
 </body>
 </html>
