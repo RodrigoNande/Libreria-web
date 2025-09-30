@@ -151,8 +151,8 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <!-- CSS mejorado -->
+   
     <link rel="stylesheet" href="estilopruebas.css">
-    <link rel="stylesheet" href="estilocarrito.css">
 
     <style>
         /* Estilos para el contador del carrito */
@@ -390,30 +390,7 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
                         </div>
 
                         <!-- FORMULARIO DE VERIFICACIÓN -->
-                        <div id="verify-form" class="auth-form auth-form-oculto">
-                            <h3>Verificar Email</h3>
-                            <p>Te enviamos un código de 6 dígitos a tu correo electrónico.</p>
-                            <p><strong>Código temporal para desarrollo: <span id="codigo-temp">------</span></strong></p>
-                            
-                            <form id="form-verificacion" method="post">
-                                <div class="form-group">
-                                    <input type="text" 
-                                           id="codigo-verificacion" 
-                                           name="codigo" 
-                                           placeholder="Código de 6 dígitos" 
-                                           maxlength="6" 
-                                           required
-                                           pattern="[0-9]{6}"
-                                           autocomplete="one-time-code">
-                                </div>
-                                <input type="hidden" id="email-verificar" name="email">
-                                <button type="submit" class="btn-auth">Verificar</button>
-                            </form>
-                            
-                            <div class="auth-separator">
-                                <a href="#" id="reenviar-codigo">¿No recibiste el código? Reenviar</a>
-                            </div>
-                        </div>
+                        
                         </div> <!-- Cierre de auth-form-container -->
                     </div>
                 </div>
@@ -924,27 +901,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.log('Recargando página ahora...');
                         window.location.reload();
                     }, 500); // Reducido aún más
-                } else {
-                    console.log('Login fallido:', data.mensaje);
-
-                    // Caso especial: email no verificado
-                    if (data.requiere_verificacion && data.email) {
-                        mostrarNotificacion('Debes verificar tu email antes de iniciar sesión', 'warning');
-
-                        // Cambiar al formulario de verificación
-                        document.getElementById('email-verificar').value = data.email;
-                        mostrarFormulario(verifyForm);
-
-                        // Ofrecer reenviar código automáticamente
-                        setTimeout(() => {
-                            if (confirm('¿Quieres que te reenviemos el código de verificación?')) {
-                                document.getElementById('reenviar-codigo').click();
-                            }
-                        }, 1000);
-                    } else {
-                        mostrarNotificacion(data.mensaje || 'Error en el login', 'error');
-                    }
-                }
+                } 
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -957,52 +914,38 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     if (formRegistro) {
-        formRegistro.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const password = formData.get('contrasena');
-            const confirmPassword = formData.get('confirmar_contrasena');
-            
-            if (password !== confirmPassword) {
-                mostrarNotificacion('Las contraseñas no coinciden', 'error');
-                return;
-            }
-            
-            const submitBtn = this.querySelector('button[type="submit"]');
-            deshabilitarBoton(submitBtn, 'Registrando...');
-            
-            fetch('registro_proceso_debug.php', {
-                method: 'POST',
-                body: formData
-            })
+    formRegistro.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const password = formData.get('contrasena');
+        const confirmPassword = formData.get('confirmar_contrasena');
+        
+        if (password !== confirmPassword) {
+            mostrarNotificacion('Las contraseñas no coinciden', 'error');
+            return;
+        }
+        
+        const submitBtn = this.querySelector('button[type="submit"]');
+        deshabilitarBoton(submitBtn, 'Registrando...');
+        
+        fetch('registro_proceso.php', {  // ← CAMBIAR AQUÍ
+            method: 'POST',
+            body: formData
+        })
             .then(response => response.json())
             .then(data => {
-                if (data.exito) {
-                    document.getElementById('email-verificar').value = formData.get('correo');
-
-                    // Solo mostrar código temporal en desarrollo
-                    if (data.codigo && document.getElementById('codigo-temp')) {
-                        document.getElementById('codigo-temp').textContent = data.codigo;
-                    } else {
-                        // En producción, ocultar el elemento del código temporal
-                        const codigoTempElement = document.getElementById('codigo-temp');
-                        if (codigoTempElement) {
-                            codigoTempElement.parentElement.style.display = 'none';
-                        }
-                    }
-
-                    mostrarFormulario(verifyForm);
-
-                    if (data.email_enviado) {
-                        mostrarNotificacion('¡Registro exitoso! Te enviamos un código de verificación a tu email.', 'exito');
-                    } else {
-                        mostrarNotificacion('¡Registro exitoso! Usa el código mostrado para verificar.', 'info');
-                    }
-                } else {
-                    mostrarNotificacion(data.mensaje || 'Error en el registro', 'error');
-                }
-            })
+            if (data.exito) {
+                mostrarNotificacion('¡Registro exitoso! Ya puedes iniciar sesión.', 'exito');
+                
+                // Cambiar directamente al formulario de login
+                setTimeout(() => {
+                    mostrarFormulario(loginForm);
+                }, 2000);
+            } else {
+                mostrarNotificacion(data.mensaje || 'Error en el registro', 'error');
+            }
+        })
             .catch(error => {
                 console.error('Error:', error);
                 mostrarNotificacion('Error de conexión', 'error');
