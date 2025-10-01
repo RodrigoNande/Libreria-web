@@ -233,13 +233,8 @@ if (empty($categoria) && empty($subcategoria)) {
     
     <title>Productos - Librería RL</title>
 </head>
-</head>
+
 <body>
-    <script src="js/validaciones.js"></script>
-<script src="js/paginacion.js"></script>
-    <!-- Header Principal -->
-    
-<!-- HEADER CORREGIDO - Reemplaza desde <header> hasta </nav> (navegación secundaria) -->
 
 <header class="header">
     <!-- HEADER PRINCIPAL -->
@@ -306,7 +301,7 @@ if (empty($categoria) && empty($subcategoria)) {
                 <div class="auth-container">
                     <a href="#" id="login-toggle" class="auth-link">Iniciar Sesión</a>
                     
-                    <!-- DROPDOWN DE AUTENTICACIÓN -->
+                     <!-- DROPDOWN DE AUTENTICACIÓN -->
                     <div id="auth-dropdown" class="auth-dropdown-oculto">
                         <div class="auth-form-container">
                             <button class="auth-close" onclick="cerrarDropdown()">&times;</button>
@@ -345,99 +340,77 @@ if (empty($categoria) && empty($subcategoria)) {
                                     <span>¿No tienes cuenta?</span>
                                     <a href="#" id="mostrar-registro">Regístrate aquí</a>
                                 </div>
-                            </div>
+                            </div> 
 
-                            <!-- FORMULARIO DE REGISTRO -->
-                            <div id="register-form" class="auth-form auth-form-oculto">
-                                <h3>Crear Cuenta</h3>
-                                
-                                <form id="form-registro" method="post">
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <input type="text" 
-                                                   name="nombre" 
-                                                   placeholder="Nombre" 
-                                                   required
-                                                   autocomplete="given-name">
-                                        </div>
-                                        <div class="form-group">
-                                            <input type="text" 
-                                                   name="apellido" 
-                                                   placeholder="Apellido" 
-                                                   required
-                                                   autocomplete="family-name">
-                                        </div>
-                                    </div>
+                                                       <!-- FORMULARIO DE REGISTRO -->
+                        <div id="register-form" class="auth-form auth-form-oculto">
+                            <h3>Crear Cuenta</h3>
+                            
+                            <form id="form-registro" method="post">
+                                <div class="form-row">
                                     <div class="form-group">
-                                        <input type="email" 
-                                               name="correo" 
-                                               placeholder="Correo electrónico" 
+                                        <input type="text" 
+                                               name="nombre" 
+                                               placeholder="Nombre" 
                                                required
-                                               autocomplete="email">
+                                               autocomplete="given-name">
                                     </div>
                                     <div class="form-group">
                                         <input type="text" 
-                                               name="usuario" 
-                                               placeholder="Nombre de usuario" 
+                                               name="apellido" 
+                                               placeholder="Apellido" 
                                                required
-                                               autocomplete="username">
+                                               autocomplete="family-name">
                                     </div>
-                                    <div class="form-group">
-                                        <input type="tel" 
-                                               name="telefono" 
-                                               placeholder="Teléfono (opcional)"
-                                               autocomplete="tel">
-                                    </div>
-                                    <div class="form-group">
-                                        <input type="text" 
-                                               name="direccion" 
-                                               placeholder="Dirección (opcional)"
-                                               autocomplete="street-address">
-                                    </div>
-                                    <div class="form-group">
-                                        <input type="password" 
-                                               name="contrasena" 
-                                               placeholder="Contraseña" 
-                                               required 
-                                               minlength="6"
-                                               autocomplete="new-password">
-                                    </div>
-                                    <div class="form-group">
-                                        <input type="password" 
-                                               name="confirmar_contrasena" 
-                                               placeholder="Confirmar contraseña" 
-                                               required 
-                                               minlength="6"
-                                               autocomplete="new-password">
-                                    </div>
-                                    <button type="submit" class="btn-auth">Crear Cuenta</button>
-                                </form>
-                                
-                                <div class="auth-separator">
-                                    <span>¿Ya tienes cuenta?</span>
-                                    <a href="#" id="mostrar-login">Inicia sesión aquí</a>
                                 </div>
-                            </div>
-
-                            <!-- FORMULARIO DE VERIFICACIÓN -->
-                            <div id="verify-form" class="auth-form auth-form-oculto">
-                                <h3>Verificar Email</h3>
-                                <p>Te hemos enviado un código de verificación a tu email.</p>
-                                
-                                <form id="form-verificacion" method="post">
-                                    <div class="form-group">
-                                        <input type="text" 
-                                               name="codigo" 
-                                               placeholder="Código de verificación" 
-                                               required
-                                               maxlength="6">
-                                    </div>
-                                    <button type="submit" class="btn-auth">Verificar</button>
-                                </form>
-                                
-                                <div class="auth-separator">
-                                    <a href="#" id="reenviar-codigo">¿No recibiste el código? Reenviar</a>
+                                <div class="form-group">
+                                    <input type="email" 
+                                           name="correo" 
+                                           placeholder="Correo electrónico" 
+                                           required
+                                           autocomplete="email">
                                 </div>
+                                <div class="form-group">
+                                    <input type="text" 
+                                           name="usuario" 
+                                           placeholder="Nombre de usuario" 
+                                           required
+                                           autocomplete="username">
+                                </div>
+                                <div class="form-group">
+                                    <input type="tel" 
+                                           name="telefono" 
+                                           placeholder="Teléfono (opcional)"
+                                           autocomplete="tel">
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" 
+                                           name="direccion" 
+                                           placeholder="Dirección (opcional)"
+                                           autocomplete="street-address">
+                                </div>
+                                <div class="form-group">
+                                    <input type="password" 
+                                           name="contrasena" 
+                                           placeholder="Contraseña" 
+                                           required 
+                                           minlength="6"
+                                           autocomplete="new-password">
+                                </div>
+                                <div class="form-group">
+                                    <input type="password" 
+                                           name="confirmar_contrasena" 
+                                           placeholder="Confirmar contraseña" 
+                                           required 
+                                           minlength="6"
+                                           autocomplete="new-password">
+                                </div>
+                                <button type="submit" class="btn-auth">Crear Cuenta</button>
+                            </form>
+                            
+                            <div class="auth-separator">
+                                <span>¿Ya tienes cuenta?</span>
+                                <a href="#" id="mostrar-login">Inicia sesión aquí</a>
                             </div>
                         </div>
                     </div>
@@ -447,7 +420,7 @@ if (empty($categoria) && empty($subcategoria)) {
     </div>
 </header>
 
-    <!-- Cart Preview (fuera del header para evitar estiramiento) 
+    <!-- Cart Preview (fuera del header para evitar estiramiento)  -->
     <div id="vista-previa-carrito" class="vista-previa-oculta">
         <div class="carrito-header">
             <h3>Mi Carrito</h3>
@@ -462,7 +435,7 @@ if (empty($categoria) && empty($subcategoria)) {
             <a href="vercarrito.php" class="btn-ver-carrito">Ver Carrito Completo</a>
         </div>
     </div>
-            -->
+           
     <!-- Navegación Secundaria con Categorías Dinámicas -->
    <!-- NAVEGACIÓN SECUNDARIA CON CATEGORÍAS -->
 <nav class="nav-secondary">
@@ -622,326 +595,50 @@ if (empty($categoria) && empty($subcategoria)) {
     <div id="notificaciones-container" style="position: fixed; top: 20px; right: 20px; z-index: 10000; pointer-events: none;"></div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // ===================================================
-            // ELEMENTOS DEL DOM PARA AUTENTICACIÓN
-            // ===================================================
-            const loginToggle = document.getElementById('login-toggle');
-            const authDropdown = document.getElementById('auth-dropdown');
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
-            const verifyForm = document.getElementById('verify-form');
-            const formLogin = document.getElementById('form-login');
-            const formRegistro = document.getElementById('form-registro');
-            const formVerificacion = document.getElementById('form-verificacion');
-            const mostrarRegistro = document.getElementById('mostrar-registro');
-            const mostrarLogin = document.getElementById('mostrar-login');
-            const reenviarCodigo = document.getElementById('reenviar-codigo');
+// ===================================================
+// SISTEMA DE AUTENTICACIÓN Y CARRITO MEJORADO
+// ===================================================
 
-            let authOverlay = null;
-            let dropdownAbierto = false;
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // === ELEMENTOS DEL DOM ===
+    // Autenticación
+    const loginToggle = document.getElementById('login-toggle');
+    const authDropdown = document.getElementById('auth-dropdown');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const verifyForm = document.getElementById('verify-form');
+    const formLogin = document.getElementById('form-login');
+    const formRegistro = document.getElementById('form-registro');
+    const formVerificacion = document.getElementById('form-verificacion');
+    const mostrarRegistro = document.getElementById('mostrar-registro');
+    const mostrarLogin = document.getElementById('mostrar-login');
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
 
-            // ===================================================
-            // FUNCIONES DE AUTENTICACIÓN
-            // ===================================================
+    // Productos
+    const productCards = document.querySelectorAll('.product-card');
+    const productsGrid = document.querySelector('.products-grid');
+    const emptyState = document.getElementById('empty-state');
+    const resultsCount = document.querySelector('.results-count');
 
-            function crearAuthOverlay() {
-                if (!authOverlay) {
-                    authOverlay = document.createElement('div');
-                    authOverlay.className = 'auth-overlay';
-                    authOverlay.style.cssText = `
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100%;
-                        background: rgba(0,0,0,0.3);
-                        z-index: 999;
-                        opacity: 0;
-                        visibility: hidden;
-                        transition: all 0.3s ease;
-                    `;
-                    authOverlay.addEventListener('click', cerrarDropdown);
-                    document.body.appendChild(authOverlay);
-                }
-                return authOverlay;
-            }
-
-            function abrirDropdown() {
-                if (authDropdown && !dropdownAbierto) {
-                    authDropdown.classList.remove('auth-dropdown-oculto');
-                    setTimeout(() => {
-                        authDropdown.classList.add('mostrar');
-                    }, 10);
-
-                    const overlay = crearAuthOverlay();
-                    overlay.style.opacity = '1';
-                    overlay.style.visibility = 'visible';
-                    dropdownAbierto = true;
-                }
-            }
-
-            function cerrarDropdown() {
-                if (authDropdown && dropdownAbierto) {
-                    authDropdown.classList.remove('mostrar');
-                    setTimeout(() => {
-                        authDropdown.classList.add('auth-dropdown-oculto');
-                    }, 300);
-
-                    if (authOverlay) {
-                        authOverlay.style.opacity = '0';
-                        authOverlay.style.visibility = 'hidden';
-                    }
-                    dropdownAbierto = false;
-                }
-            }
-
-            function mostrarFormulario(formulario) {
-                // Ocultar todos los formularios
-                if (loginForm) loginForm.classList.add('auth-form-oculto');
-                if (registerForm) registerForm.classList.add('auth-form-oculto');
-                if (verifyForm) verifyForm.classList.add('auth-form-oculto');
-
-                // Mostrar el formulario seleccionado
-                if (formulario) {
-                    formulario.classList.remove('auth-form-oculto');
-                }
-            }
-
-            function deshabilitarBoton(boton, texto = 'Procesando...') {
-                if (boton) {
-                    boton.disabled = true;
-                    boton.textContent = texto;
-                }
-            }
-
-            function habilitarBoton(boton, textoOriginal) {
-                if (boton) {
-                    boton.disabled = false;
-                    boton.textContent = textoOriginal;
-                }
-            }
-
-            function mostrarNotificacion(mensaje, tipo = 'success') {
-                const notificacionesContainer = document.getElementById('notificaciones-container');
-                if (!notificacionesContainer) return;
-
-                const notificacion = document.createElement('div');
-                notificacion.className = `toast ${tipo}`;
-                notificacion.innerHTML = `
-                    <div class="toast-header">
-                        <span class="toast-title">${tipo === 'success' ? 'Éxito' : tipo === 'error' ? 'Error' : 'Info'}</span>
-                        <button class="toast-close" onclick="this.parentElement.parentElement.remove()">&times;</button>
-                    </div>
-                    <div class="toast-message">${mensaje}</div>
-                `;
-
-                notificacionesContainer.appendChild(notificacion);
-
-                // Auto-remover después de 5 segundos
-                setTimeout(() => {
-                    if (notificacion.parentElement) {
-                        notificacion.remove();
-                    }
-                }, 5000);
-            }
-
-            function cerrarSesion() {
-                fetch('logout_proceso.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: 'cerrar_sesion=1'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.exito) {
-                        mostrarNotificacion('Sesión cerrada correctamente', 'success');
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1000);
-                    } else {
-                        mostrarNotificacion(data.mensaje || 'Error al cerrar sesión', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    mostrarNotificacion('Error de conexión', 'error');
-                });
-            }
-
-            // ===================================================
-            // EVENT LISTENERS PARA AUTENTICACIÓN
-            // ===================================================
-
-            if (loginToggle) {
-                loginToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    abrirDropdown();
-                });
-            }
-
-            if (mostrarRegistro) {
-                mostrarRegistro.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    mostrarFormulario(registerForm);
-                });
-            }
-
-            if (mostrarLogin) {
-                mostrarLogin.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    mostrarFormulario(loginForm);
-                });
-            }
-
-            // LOGIN
-            if (formLogin) {
-                formLogin.addEventListener('submit', function(e) {
-                    e.preventDefault();
-
-                    const formData = new FormData(this);
-                    const submitBtn = this.querySelector('button[type="submit"]');
-                    deshabilitarBoton(submitBtn, 'Iniciando sesión...');
-
-                    fetch('login_proceso.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.exito) {
-                            mostrarNotificacion('¡Bienvenido!', 'success');
-                            // Cerrar el modal antes de recargar
-                            cerrarDropdown();
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1000);
-                        } else {
-                            mostrarNotificacion(data.mensaje || 'Error en el login', 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        mostrarNotificacion('Error de conexión', 'error');
-                    })
-                    .finally(() => {
-                        habilitarBoton(submitBtn, 'Iniciar Sesión');
-                    });
-                });
-            }
-
-            // REGISTRO
-            if (formRegistro) {
-                formRegistro.addEventListener('submit', function(e) {
-                    e.preventDefault();
-
-                    const formData = new FormData(this);
-                    const submitBtn = this.querySelector('button[type="submit"]');
-                    deshabilitarBoton(submitBtn, 'Creando cuenta...');
-
-                    fetch('registro_proceso.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.exito) {
-                            mostrarNotificacion('¡Registro exitoso! Verifica tu email.', 'success');
-                            mostrarFormulario(verifyForm);
-                        } else {
-                            mostrarNotificacion(data.mensaje || 'Error en el registro', 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        mostrarNotificacion('Error de conexión', 'error');
-                    })
-                    .finally(() => {
-                        habilitarBoton(submitBtn, 'Crear Cuenta');
-                    });
-                });
-            }
-
-            // VERIFICACIÓN
-            if (formVerificacion) {
-                formVerificacion.addEventListener('submit', function(e) {
-                    e.preventDefault();
-
-                    const formData = new FormData(this);
-                    const submitBtn = this.querySelector('button[type="submit"]');
-                    deshabilitarBoton(submitBtn, 'Verificando...');
-
-                    fetch('verificar_proceso.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.exito) {
-                            mostrarNotificacion('¡Email verificado! Ya puedes iniciar sesión.', 'success');
-                            setTimeout(() => {
-                                mostrarFormulario(loginForm);
-                            }, 2000);
-                        } else {
-                            mostrarNotificacion(data.mensaje || 'Código inválido', 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        mostrarNotificacion('Error de conexión', 'error');
-                    })
-                    .finally(() => {
-                        habilitarBoton(submitBtn, 'Verificar');
-                    });
-                });
-            }
-
-            // REENVIAR CÓDIGO
-            if (reenviarCodigo) {
-                reenviarCodigo.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    mostrarNotificacion('Función de reenvío próximamente', 'info');
-                });
-            }
-
-            // Cerrar dropdown con Escape
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && dropdownAbierto) {
-                    cerrarDropdown();
-                }
-            });
-
-            // ===================================================
-            // FUNCIONALIDAD EXISTENTE DEL CARRITO Y PRODUCTOS
-            // ===================================================
-
-            // Elementos del DOM
-            const searchInput = document.getElementById('search-input');
-            const searchBtn = document.getElementById('search-btn');
-            const sortSelect = document.getElementById('sort-select');
-            const viewBtns = document.querySelectorAll('.view-btn');
-            const productsGrid = document.getElementById('products-grid');
-            const productCards = document.querySelectorAll('.product-card');
-            const addToCartBtns = document.querySelectorAll('.add-to-cart-btn');
-            const emptyState = document.getElementById('empty-state');
-
-            // Variables
-            let currentView = 'grid';
-            let cartCount = <?php echo $cantidadCarrito; ?>;
-            let carritoAbierto = false;
-            let carritoOverlay = null;
-
-            // Elementos del carrito
-            const carritoToggle = document.getElementById('carrito-toggle');
-            const vistaPrevia = document.getElementById('vista-previa-carrito');
-            const cerrarVistaPrevia = document.querySelector('.cerrar-vista-previa');
-            const productosVistaPrevia = document.getElementById('productos-vista-previa');
-            const contadorCarrito = document.getElementById('contador-carrito');
-
-            // Funcionalidad de búsqueda
-            function searchProducts() {
+    // Carrito
+    const botonesAgregar = document.querySelectorAll('.add-to-cart-btn');
+    const contadorCarrito = document.getElementById('contador-carrito');
+    const carritoToggle = document.getElementById('carrito-toggle');
+    const vistaPrevia = document.getElementById('vista-previa-carrito');
+    const cerrarVistaPrevia = document.querySelector('.cerrar-vista-previa');
+    const productosVistaPrevia = document.getElementById('productos-vista-previa');
+    
+    let authOverlay = null;
+    let dropdownAbierto = false;
+    let carritoAbierto = false;
+    let carritoOverlay = null;
+    
+    // ===================================================
+    // SISTEMA DE AUTENTICACIÓN (MEJORADO)
+    // ===================================================
+    function searchProducts() {
                 const searchTerm = searchInput.value.toLowerCase().trim();
                 let visibleCount = 0;
 
@@ -970,274 +667,606 @@ if (empty($categoria) && empty($subcategoria)) {
                     emptyState.style.display = 'none';
                 }
             }
+    function crearAuthOverlay() {
+        if (!authOverlay) {
+            authOverlay = document.createElement('div');
+            authOverlay.className = 'auth-overlay';
+            authOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.3);
+                z-index: 999;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+            `;
+            authOverlay.addEventListener('click', cerrarDropdown);
+            document.body.appendChild(authOverlay);
+        }
+        return authOverlay;
+    }
+    
+    function abrirDropdown() {
+        if (authDropdown && !dropdownAbierto) {
+            authDropdown.classList.remove('auth-dropdown-oculto');
+            setTimeout(() => {
+                authDropdown.classList.add('mostrar');
+            }, 10);
+            
+            const overlay = crearAuthOverlay();
+            overlay.style.opacity = '1';
+            overlay.style.visibility = 'visible';
+            dropdownAbierto = true;
+            
+            // Mostrar formulario de login por defecto
+            mostrarFormulario(loginForm);
+        }
+    }
+    
+    function cerrarDropdown() {
+        console.log('Ejecutando cerrarDropdown, dropdownAbierto:', dropdownAbierto);
+        if (authDropdown) {
+            authDropdown.classList.remove('mostrar');
+            setTimeout(() => {
+                authDropdown.classList.add('auth-dropdown-oculto');
+                console.log('Dropdown cerrado');
+            }, 300);
 
-            // Funcionalidad de ordenamiento
-            function sortProducts() {
-                const sortValue = sortSelect.value;
-                const cardsArray = Array.from(productCards);
-
-                cardsArray.sort((a, b) => {
-                    switch(sortValue) {
-                        case 'name':
-                            return a.dataset.name.localeCompare(b.dataset.name);
-                        case 'price-low':
-                            return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
-                        case 'price-high':
-                            return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
-                        case 'brand':
-                            return a.dataset.brand.localeCompare(b.dataset.brand);
-                        default:
-                            return 0;
-                    }
-                });
-
-                // Reordenar elementos en el DOM
-                cardsArray.forEach(card => {
-                    productsGrid.appendChild(card);
-                });
+            if (authOverlay) {
+                authOverlay.style.opacity = '0';
+                authOverlay.style.visibility = 'hidden';
             }
-
-            // Cambio de vista (grid/lista)
-            function changeView(view) {
-                currentView = view;
-                
-                // Actualizar botones activos
-                viewBtns.forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.view === view);
-                });
-
-                // Aplicar clases CSS
-                if (view === 'list') {
-                    productsGrid.classList.add('list-view');
-                    productCards.forEach(card => card.classList.add('list-view'));
-                } else {
-                    productsGrid.classList.remove('list-view');
-                    productCards.forEach(card => card.classList.remove('list-view'));
+            dropdownAbierto = false;
+        } else {
+            console.log('authDropdown no encontrado');
+        }
+    }
+    
+    function mostrarFormulario(formularioMostrar) {
+        const formularios = [loginForm, registerForm, verifyForm];
+        formularios.forEach(form => {
+            if (form) {
+                form.classList.add('auth-form-oculto');
+                form.classList.remove('active');
+            }
+        });
+        
+        if (formularioMostrar) {
+            formularioMostrar.classList.remove('auth-form-oculto');
+            formularioMostrar.classList.add('active');
+        }
+    }
+    
+    // FUNCIÓN DE NOTIFICACIONES MEJORADA
+    function mostrarNotificacion(mensaje, tipo = 'exito', duracion = 4000) {
+        const contenedor = document.getElementById('notificaciones-container');
+        if (!contenedor) return;
+        
+        // Crear notificación
+        const notif = document.createElement('div');
+        notif.className = `notificacion-flotante ${tipo}`;
+        notif.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            border-left: 4px solid ${tipo === 'exito' ? '#2ed573' : tipo === 'error' ? '#ff4757' : '#4834d4'};
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            pointer-events: auto;
+            max-width: 350px;
+            position: relative;
+            overflow: hidden;
+        `;
+        
+        // Icono según tipo
+        let icono = '✅';
+        if (tipo === 'error') icono = '❌';
+        else if (tipo === 'info') icono = 'ℹ️';
+        else if (tipo === 'warning') icono = '⚠️';
+        
+        notif.innerHTML = `
+            <div class="notif-icono" style="font-size: 24px; flex-shrink: 0;">${icono}</div>
+            <div class="notif-contenido" style="flex: 1; min-width: 0;">
+                <div class="notif-mensaje" style="font-weight: 500; color: #333; margin-bottom: 2px;">${mensaje}</div>
+                <div class="notif-tiempo" style="font-size: 12px; color: #666;">Ahora</div>
+            </div>
+            <button class="notif-cerrar" style="
+                background: none;
+                border: none;
+                font-size: 18px;
+                cursor: pointer;
+                color: #999;
+                padding: 0;
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                transition: all 0.2s ease;
+                flex-shrink: 0;
+            ">&times;</button>
+            <div class="notif-progreso" style="
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                height: 3px;
+                background: ${tipo === 'exito' ? '#2ed573' : tipo === 'error' ? '#ff4757' : '#4834d4'};
+                width: 100%;
+                transform-origin: left;
+                animation: progreso ${duracion}ms linear forwards;
+            "></div>
+        `;
+        
+        // Agregar al contenedor
+        contenedor.appendChild(notif);
+        
+        // Animación de entrada
+        setTimeout(() => {
+            notif.style.transform = 'translateX(0)';
+            notif.style.opacity = '1';
+        }, 100);
+        
+        // Botón de cerrar
+        const btnCerrar = notif.querySelector('.notif-cerrar');
+        btnCerrar.addEventListener('click', () => {
+            cerrarNotificacion(notif);
+        });
+        
+        // Hover para pausar progreso
+        notif.addEventListener('mouseenter', () => {
+            const progreso = notif.querySelector('.notif-progreso');
+            progreso.style.animationPlayState = 'paused';
+        });
+        
+        notif.addEventListener('mouseleave', () => {
+            const progreso = notif.querySelector('.notif-progreso');
+            progreso.style.animationPlayState = 'running';
+        });
+        
+        // Auto-cerrar
+        setTimeout(() => {
+            if (notif.parentNode) {
+                cerrarNotificacion(notif);
+            }
+        }, duracion);
+        
+        function cerrarNotificacion(elemento) {
+            elemento.style.transform = 'translateX(100%)';
+            elemento.style.opacity = '0';
+            setTimeout(() => {
+                if (elemento.parentNode) {
+                    elemento.parentNode.removeChild(elemento);
                 }
+            }, 400);
+        }
+    }
+    
+    // NUEVAS FUNCIONES DE UTILIDAD
+    function deshabilitarBoton(boton, texto = 'Procesando...') {
+        if (boton) {
+            boton.disabled = true;
+            boton.classList.add('cargando');
+            boton.dataset.textoOriginal = boton.textContent;
+            boton.textContent = texto;
+        }
+    }
+    
+    function habilitarBoton(boton) {
+        if (boton) {
+            boton.disabled = false;
+            boton.classList.remove('cargando');
+            if (boton.dataset.textoOriginal) {
+                boton.textContent = boton.dataset.textoOriginal;
             }
-
-            // Funciones para la vista previa del carrito
-            function cargarVistaPrevia() {
-                if (!productosVistaPrevia) return;
+        }
+    }
+    
+    // Event listeners de autenticación
+    if (loginToggle) {
+        loginToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (dropdownAbierto) {
+                cerrarDropdown();
+            } else {
+                abrirDropdown();
+                mostrarFormulario(loginForm);
+            }
+        });
+    }
+    
+    if (mostrarRegistro) {
+        mostrarRegistro.addEventListener('click', function(e) {
+            e.preventDefault();
+            mostrarFormulario(registerForm);
+        });
+    }
+    
+    if (mostrarLogin) {
+        mostrarLogin.addEventListener('click', function(e) {
+            e.preventDefault();
+            mostrarFormulario(loginForm);
+        });
+    }
+    
+    // Hacer funciones globales para el botón de cerrar
+    window.cerrarDropdown = cerrarDropdown;
+    window.abrirDropdown = abrirDropdown;
+    window.mostrarFormulario = mostrarFormulario;
+    
+    // Formularios de autenticación
+    if (formLogin) {
+        formLogin.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            const email = formData.get('email');
+            const password = formData.get('password');
+            
+            if (!email || !password) {
+                mostrarNotificacion('Por favor, completa todos los campos', 'error');
+                return;
+            }
+            
+            if (!email.includes('@')) {
+                mostrarNotificacion('Por favor, ingresa un email válido', 'error');
+                return;
+            }
+            
+            deshabilitarBoton(submitBtn, 'Iniciando sesión...');
+            
+            fetch('login_proceso.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Respuesta del servidor:', data);
+                if (data.exito) {
+                    console.log('Login exitoso, procediendo a cerrar dropdown...');
+                    if (data.es_admin) {
+                        mostrarNotificacion('¡Bienvenido Administrador! Acceso completo al sistema', 'exito');
+                    } else {
+                        mostrarNotificacion('¡Login exitoso! Recargando página...', 'exito');
+                    }
+                    // Cerrar dropdown inmediatamente
+                    cerrarDropdown();
+                    setTimeout(() => {
+                        console.log('Recargando página ahora...');
+                        window.location.reload();
+                    }, 500); // Reducido aún más
+                } 
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarNotificacion('Error de conexión', 'error');
+            })
+            .finally(() => {
+                habilitarBoton(submitBtn);
+            });
+        });
+    }
+    
+    if (formRegistro) {
+    formRegistro.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const password = formData.get('contrasena');
+        const confirmPassword = formData.get('confirmar_contrasena');
+        
+        if (password !== confirmPassword) {
+            mostrarNotificacion('Las contraseñas no coinciden', 'error');
+            return;
+        }
+        
+        const submitBtn = this.querySelector('button[type="submit"]');
+        deshabilitarBoton(submitBtn, 'Registrando...');
+        
+        fetch('registro_proceso.php', {  // ← CAMBIAR AQUÍ
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+            if (data.exito) {
+                mostrarNotificacion('¡Registro exitoso! Ya puedes iniciar sesión.', 'exito');
                 
-                productosVistaPrevia.innerHTML = '<div class="carrito-loading"><p>Cargando carrito...</p></div>';
-                
-                fetch('vistapreviacarrito.php', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(text => {
-                    try {
-                        return JSON.parse(text);
-                    } catch (e) {
-                        throw new Error(`Error parsing JSON: ${e.message}. Response: ${text.substring(0, 200)}`);
-                    }
-                })
-                .then(data => {
-                    if (productosVistaPrevia) {
-                        if (data.error) {
-                            productosVistaPrevia.innerHTML = `
-                                <div class="carrito-error">
-                                    <p>Error: ${data.mensaje}</p>
+                // Cambiar directamente al formulario de login
+                setTimeout(() => {
+                    mostrarFormulario(loginForm);
+                }, 2000);
+            } else {
+                mostrarNotificacion(data.mensaje || 'Error en el registro', 'error');
+            }
+        })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarNotificacion('Error de conexión', 'error');
+            })
+            .finally(() => {
+                habilitarBoton(submitBtn);
+            });
+        });
+    }
+    
+    if (formVerificacion) {
+        formVerificacion.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            deshabilitarBoton(submitBtn, 'Verificando...');
+            
+            fetch('verificar_proceso.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.exito) {
+                    mostrarNotificacion('¡Email verificado! Ya puedes iniciar sesión.', 'exito');
+                    setTimeout(() => {
+                        mostrarFormulario(loginForm);
+                    }, 2000);
+                } else {
+                    mostrarNotificacion(data.mensaje || 'Código inválido', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarNotificacion('Error de conexión', 'error');
+            })
+            .finally(() => {
+                habilitarBoton(submitBtn);
+            });
+        });
+    }
+    
+    // ===================================================
+    // SISTEMA DE CARRITO (MEJORADO)
+    // ===================================================
+    
+    function actualizarContador(nuevaCantidad) {
+        if (contadorCarrito) {
+            contadorCarrito.textContent = nuevaCantidad;
+            contadorCarrito.style.animation = 'none';
+            setTimeout(() => {
+                contadorCarrito.style.animation = 'bounceIn 0.5s ease-out';
+            }, 10);
+        }
+    }
+    
+    function cargarVistaPrevia() {
+        if (!productosVistaPrevia) return;
+        
+        productosVistaPrevia.innerHTML = '<div class="carrito-loading"><p>Cargando carrito...</p></div>';
+        
+        fetch('vistapreviacarrito.php', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.text();
+        })
+        .then(text => {
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                throw new Error(`Error parsing JSON: ${e.message}. Response: ${text.substring(0, 200)}`);
+            }
+        })
+        .then(data => {
+            if (productosVistaPrevia) {
+                if (data.error) {
+                    productosVistaPrevia.innerHTML = `
+                        <div class="carrito-error">
+                            <p>Error: ${data.mensaje}</p>
+                        </div>
+                    `;
+                    return;
+                }
+                if (data.productos && data.productos.length > 0) {
+                    let html = '';
+                    data.productos.forEach(producto => {
+                        const hasImage = producto.imagen && producto.imagen !== 'img/no-image.png';
+                        html += `
+                            <div class="producto-preview">
+                                ${hasImage ? 
+                                    `<img src="${producto.imagen}" alt="${producto.nombre}" onerror="this.style.display='none'; this.parentElement.classList.add('image-error');">` :
+                                    `<div class="no-image-preview">
+                                        <div class="no-image-icon">📷</div>
+                                    </div>`
+                                }
+                                <div class="producto-info">
+                                    <h4>${producto.nombre}</h4>
+                                    <p>Cantidad: ${producto.cantidad} - $${parseFloat(producto.precio).toFixed(2)}</p>
                                 </div>
-                            `;
-                            return;
-                        }
-                        if (data.productos && data.productos.length > 0) {
-                            let html = '';
-                            data.productos.forEach(producto => {
-                                html += `
-                                    <div class="producto-preview">
-                                        <img src="${producto.imagen}" alt="${producto.nombre}" onerror="this.src='img/no-image.png'">
-                                        <div class="producto-info">
-                                            <h4>${producto.nombre}</h4>
-                                            <p>Cantidad: ${producto.cantidad} - $${parseFloat(producto.precio).toFixed(2)}</p>
-                                        </div>
-                                    </div>
-                                `;
-                            });
-                            html += `
-                                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                                    <strong>Total: $${parseFloat(data.total).toFixed(2)}</strong>
-                                </div>
-                            `;
-                            productosVistaPrevia.innerHTML = html;
-                        } else {
-                            productosVistaPrevia.innerHTML = `
-                                <div class="carrito-vacio">
-                                    <p>Tu carrito está vacío</p>
-                                </div>
-                            `;
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Vista previa - Error completo:', error);
-                    if (productosVistaPrevia) {
-                        productosVistaPrevia.innerHTML = `
-                            <div class="carrito-error">
-                                <p>Error al cargar el carrito</p>
                             </div>
                         `;
-                    }
-                });
-            }
-
-            function mostrarVistaPrevia() {
-                if (vistaPrevia && carritoToggle) {
-                    // Calcular la posición del botón del carrito
-                    const rect = carritoToggle.getBoundingClientRect();
-                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                    
-                    // Posicionar el cart preview arriba del botón
-                    vistaPrevia.style.top = (rect.top + scrollTop - vistaPrevia.offsetHeight - 10) + 'px';
-                    vistaPrevia.style.left = (rect.right - vistaPrevia.offsetWidth) + 'px';
-                    
-                    vistaPrevia.classList.remove('vista-previa-oculta');
-                    setTimeout(() => vistaPrevia.classList.add('mostrar'), 10);
-                    carritoAbierto = true;
+                    });
+                    html += `
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                            <strong>Total: ${parseFloat(data.total).toFixed(2)}</strong>
+                        </div>
+                    `;
+                    productosVistaPrevia.innerHTML = html;
+                } else {
+                    productosVistaPrevia.innerHTML = `
+                        <div class="carrito-vacio">
+                            <p>Tu carrito está vacío</p>
+                        </div>
+                    `;
                 }
             }
-
-            function ocultarVistaPrevia() {
-                if (vistaPrevia) {
-                    vistaPrevia.classList.remove('mostrar');
-                    setTimeout(() => vistaPrevia.classList.add('vista-previa-oculta'), 300);
-                    carritoAbierto = false;
-                }
-            }
-
-            // Recalcular posición al redimensionar la ventana
-            window.addEventListener('resize', function() {
-                if (carritoAbierto && vistaPrevia && carritoToggle) {
-                    const rect = carritoToggle.getBoundingClientRect();
-                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                    
-                    vistaPrevia.style.top = (rect.top + scrollTop - vistaPrevia.offsetHeight - 10) + 'px';
-                    vistaPrevia.style.left = (rect.right - vistaPrevia.offsetWidth) + 'px';
-                }
-            });
-            function addToCart(productId, btn) {
-                // Deshabilitar botón temporalmente
-                btn.disabled = true;
-                btn.textContent = 'Agregando...';
-
-                fetch('carrito_ajax.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `id=${encodeURIComponent(productId)}&accion=agregar`
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(text => {
-                    try {
-                        return JSON.parse(text);
-                    } catch (e) {
-                        throw new Error(`Error parsing JSON: ${e.message}. Response: ${text.substring(0, 200)}`);
-                    }
-                })
-                .then(data => {
-                    btn.disabled = false;
-                    btn.textContent = 'Agregar al Carrito';
-
-                    if (data.exito) {
-                        cartCount = data.cantidad_total;
-                        updateCartCount();
-                        
-                        // Feedback visual
-                        btn.style.background = 'var(--success-color)';
-                        btn.textContent = '¡Agregado!';
-                        
-                        setTimeout(() => {
-                            btn.style.background = '';
-                            btn.textContent = 'Agregar al Carrito';
-                        }, 1500);
-
-                        // Mostrar notificación
-                        showNotification(`"${data.nombre || 'Producto'}" agregado al carrito`, 'success');
-                        
-                        // Actualizar vista previa si está abierta
-                        if (carritoAbierto) {
-                            setTimeout(() => cargarVistaPrevia(), 500);
-                        }
-                    } else {
-                        showNotification('Error: ' + (data.mensaje || 'Error desconocido'), 'error');
-                    }
-                })
-                .catch(error => {
-                    btn.disabled = false;
-                    btn.textContent = 'Agregar al Carrito';
-                    showNotification('Error de conexión: ' + error.message, 'error');
-                });
-            }
-
-            // Actualizar contador del carrito
-            function updateCartCount() {
-                const cartCountElement = document.querySelector('.cart-count');
-                cartCountElement.textContent = cartCount;
-                
-                // Animación
-                cartCountElement.style.animation = 'none';
-                setTimeout(() => {
-                    cartCountElement.style.animation = 'bounce 0.5s ease';
-                }, 10);
-            }
-
-            // Mostrar notificación
-            function showNotification(message, type = 'success') {
-                const notification = document.createElement('div');
-                notification.className = `notification ${type}`;
-                notification.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    background: ${type === 'success' ? 'var(--success-color)' : 'var(--error-color)'};
-                    color: white;
-                    padding: 1rem 1.5rem;
-                    border-radius: var(--radius-md);
-                    box-shadow: var(--shadow-lg);
-                    z-index: 10000;
-                    opacity: 0;
-                    transform: translateX(100%);
-                    transition: all 0.3s ease;
+        })
+        .catch(error => {
+            console.error('Vista previa - Error completo:', error);
+            if (productosVistaPrevia) {
+                productosVistaPrevia.innerHTML = `
+                    <div class="carrito-error">
+                        <p>Error al cargar el carrito</p>
+                    </div>
                 `;
-                notification.textContent = message;
-
-                document.body.appendChild(notification);
-
-                // Mostrar notificación
-                setTimeout(() => {
-                    notification.style.opacity = '1';
-                    notification.style.transform = 'translateX(0)';
-                }, 100);
-
-                // Ocultar notificación
-                setTimeout(() => {
-                    notification.style.opacity = '0';
-                    notification.style.transform = 'translateX(100%)';
-                    setTimeout(() => {
-                        document.body.removeChild(notification);
-                    }, 300);
-                }, 3000);
             }
+        });
+    }
+    
+    // Manejar botones agregar al carrito
+    botonesAgregar.forEach(boton => {
+        boton.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Obtener datos del producto desde el elemento padre (product-card)
+            const productCard = this.closest('.product-card');
+            const productoId = productCard.getAttribute('data-id') || productCard.getAttribute('data-name');
+            const productoNombre = productCard.getAttribute('data-name');
+            const productoPrecio = productCard.getAttribute('data-price');
+            
+            if (!productoId || !productoNombre || !productoPrecio) {
+                mostrarNotificacion('Error: Datos del producto incompletos', 'error');
+                return;
+            }
+            
+            const botonOriginal = this.innerHTML;
+            this.innerHTML = 'Agregando...';
+            this.classList.add('agregando');
+            this.disabled = true;
 
-            // Event Listeners
-            searchInput.addEventListener('input', searchProducts);
+            fetch('carrito_ajax.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `id=${encodeURIComponent(productoId)}&accion=agregar`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(text => {
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    throw new Error(`Error parsing JSON: ${e.message}. Response: ${text.substring(0, 200)}`);
+                }
+            })
+            .then(data => {
+                this.innerHTML = botonOriginal;
+                this.classList.remove('agregando');
+                this.disabled = false;
+
+                if (data.exito) {
+                    actualizarContador(data.cantidad_total);
+                    this.style.background = '#26d45c';
+                    this.innerHTML = '¡Agregado!';
+                    setTimeout(() => {
+                        this.style.background = '';
+                        this.innerHTML = botonOriginal;
+                    }, 1500);
+                    
+                    mostrarNotificacion(`"${productoNombre}" agregado al carrito`, 'exito');
+                    
+                    if (carritoAbierto) {
+                        setTimeout(() => cargarVistaPrevia(), 500);
+                    }
+                } else {
+                    mostrarNotificacion('Error: ' + (data.mensaje || 'Error desconocido'), 'error');
+                }
+            })
+            .catch(error => {
+                this.innerHTML = botonOriginal;
+                this.classList.remove('agregando');
+                this.disabled = false;
+                mostrarNotificacion('Error de conexión: ' + error.message, 'error');
+            });
+        });
+    });
+    
+    // Toggle vista previa del carrito
+    if (carritoToggle) {
+        carritoToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!carritoAbierto) {
+                cargarVistaPrevia();
+                mostrarVistaPrevia();
+            } else {
+                ocultarVistaPrevia();
+            }
+        });
+    }
+    
+    function mostrarVistaPrevia() {
+        if (vistaPrevia) {
+            vistaPrevia.classList.remove('vista-previa-oculta');
+            setTimeout(() => vistaPrevia.classList.add('mostrar'), 10);
+            carritoAbierto = true;
+        }
+    }
+    
+    function ocultarVistaPrevia() {
+        if (vistaPrevia) {
+            vistaPrevia.classList.remove('mostrar');
+            setTimeout(() => vistaPrevia.classList.add('vista-previa-oculta'), 300);
+            carritoAbierto = false;
+        }
+    }
+    
+    // Cerrar vista previa
+    if (cerrarVistaPrevia) {
+        cerrarVistaPrevia.addEventListener('click', ocultarVistaPrevia);
+    }
+    
+    // Cerrar con Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (carritoAbierto) {
+                ocultarVistaPrevia();
+            } else if (dropdownAbierto) {
+                cerrarDropdown();
+            }
+        }
+    });
+    
+    // Prevenir cierre al hacer clic dentro
+    if (vistaPrevia) {
+        vistaPrevia.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+    
+    if (authDropdown) {
+        authDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+    
+    // Cargar contador inicial
+    cargarVistaPrevia();
+    
+    // Event listeners para búsqueda
+  searchInput.addEventListener('input', searchProducts);
             searchBtn.addEventListener('click', searchProducts);
             sortSelect.addEventListener('change', sortProducts);
 
@@ -1247,110 +1276,116 @@ if (empty($categoria) && empty($subcategoria)) {
                 });
             });
 
-            addToCartBtns.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const productId = btn.dataset.id;
-                    addToCart(productId, btn);
-                });
-            });
-
-            // Búsqueda con Enter
             searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     searchProducts();
                 }
             });
-
-            // Event listeners del carrito
-            if (carritoToggle) {
-                carritoToggle.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    if (!carritoAbierto) {
-                        cargarVistaPrevia();
-                        mostrarVistaPrevia();
-                    } else {
-                        ocultarVistaPrevia();
-                    }
-                });
-            }
-
-            if (cerrarVistaPrevia) {
-                cerrarVistaPrevia.addEventListener('click', ocultarVistaPrevia);
-            }
-
-            // Cerrar con Escape
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    if (carritoAbierto) {
-                        ocultarVistaPrevia();
-                    }
-                }
-            });
-
-            // Cerrar al hacer clic fuera
-            document.addEventListener('click', function(e) {
-                if (carritoAbierto && vistaPrevia && !vistaPrevia.contains(e.target) && !carritoToggle.contains(e.target)) {
-                    ocultarVistaPrevia();
-                }
-            });
-
-            // Inicialización
-            console.log('Sistema de productos inicializado correctamente');
-        });
-
-        // CSS adicional para animaciones
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes bounce {
-                0%, 20%, 60%, 100% {
-                    transform: translateY(0);
-                }
-                40% {
-                    transform: translateY(-10px);
-                }
-                80% {
-                    transform: translateY(-5px);
-                }
-            }
-
-            .notification {
-                font-weight: 500;
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-            }
-
-            .add-to-cart-btn:disabled {
-                opacity: 0.7;
-                cursor: not-allowed;
-                transform: none !important;
-            }
-
-            /* Hover effects mejorados */
-            .suggestion-link:hover {
-                box-shadow: var(--shadow-md);
-            }
-
-            .action-btn:hover {
-                box-shadow: var(--shadow-md);
-            }
-        `;
-        document.head.appendChild(style);
-        const loginValidator = new FormValidator('form-login', {
-    realTimeValidation: true,
-    scrollToError: true
+    
+    console.log('Sistemas de autenticación, carrito y búsqueda inicializados correctamente');
 });
 
-loginValidator.addRules(CommonValidators.login);
+// === FUNCIÓN PARA CERRAR SESIÓN (GLOBAL) ===
+function cerrarSesion() {
+    if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+        fetch('logout_proceso.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.exito) {
+                window.location.reload();
+            } else {
+                alert('Error al cerrar sesión: ' + data.mensaje);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            window.location.href = 'logout_proceso.php';
+        });
+    }
+}
 
-// Para registro
-const registerValidator = new FormValidator('form-registro');
-registerValidator.addRules(CommonValidators.register);
+// === CSS PARA LAS NOTIFICACIONES ===
+const styleNotificaciones = document.createElement('style');
+styleNotificaciones.textContent = `
+    @keyframes progreso {
+        0% { transform: scaleX(1); }
+        100% { transform: scaleX(0); }
+    }
+    
+    .notif-cerrar:hover {
+        background: rgba(0,0,0,0.1) !important;
+        color: #666 !important;
+    }
+    
+    .notif-progreso {
+        animation: progreso linear forwards;
+    }
+    
+    /* Animación de bounce para el contador */
+    @keyframes bounceIn {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+`;
+document.head.appendChild(styleNotificaciones);
 
-// Para productos (admin)
-const productoValidator = new FormValidator('form-producto');
-productoValidator.addRules(CommonValidators.producto);
-    </script>
+// ===================================================
+// SISTEMA DE DROPDOWN DE CATEGORÍAS (MEJORADO)
+// ===================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    const dropdown = document.querySelector('.dropdown');
+    const dropdownContent = document.querySelector('.dropdown-content');
+    
+    if (dropdown && dropdownContent) {
+        let timeoutId;
+        
+        // Función para mostrar el dropdown
+        function mostrarDropdown() {
+            clearTimeout(timeoutId);
+            dropdownContent.style.display = 'block';
+            dropdownContent.style.opacity = '1';
+            dropdownContent.style.transform = 'translateX(-50%) translateY(0)';
+        }
+        
+        // Función para ocultar el dropdown
+        function ocultarDropdown() {
+            timeoutId = setTimeout(() => {
+                dropdownContent.style.opacity = '0';
+                dropdownContent.style.transform = 'translateX(-50%) translateY(-10px)';
+                setTimeout(() => {
+                    dropdownContent.style.display = 'none';
+                }, 300);
+            }, 150); // Pequeño delay para evitar flickering
+        }
+        
+        // Eventos del dropdown
+        dropdown.addEventListener('mouseenter', mostrarDropdown);
+        dropdown.addEventListener('mouseleave', ocultarDropdown);
+        
+        // Mantener visible cuando el mouse está sobre el contenido
+        dropdownContent.addEventListener('mouseenter', mostrarDropdown);
+        dropdownContent.addEventListener('mouseleave', ocultarDropdown);
+        
+        // Cerrar dropdown al hacer click fuera
+        document.addEventListener('click', function(e) {
+            if (!dropdown.contains(e.target)) {
+                ocultarDropdown();
+            }
+        });
+        
+        // Prevenir que el click en el dropdown lo cierre
+        dropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+});
+</script>
 </body>
 </html>

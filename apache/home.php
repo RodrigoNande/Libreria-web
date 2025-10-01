@@ -31,12 +31,6 @@ if (isset($_SESSION['carrito'])) {
     }
 }
 
-// =============================================
-// FUNCIÓN PARA OBTENER CATEGORÍAS CON SUBCATEGORÍAS
-// =============================================
-// =============================================
-// FUNCIÓN PARA OBTENER CATEGORÍAS CON SUBCATEGORÍAS
-// =============================================
 function obtenerCategoriasConSubcategorias($conn) {
     $categorias = [];
     
@@ -85,9 +79,15 @@ function obtenerCategoriasConSubcategorias($conn) {
             $categorias[$categoria_nombre] = $subcategorias;
         }
     }
-    
+    if (!empty($subcategorias)) {
+    $categorias[$categoria_nombre] = $subcategorias;
+} else {
+    // Categoría sin subcategorías - agregar enlace directo
+    $categorias[$categoria_nombre] = ["Ver todos"];
+}
     return $categorias;
 }
+
 
 $categorias = obtenerCategoriasConSubcategorias($conn);
 
@@ -181,7 +181,11 @@ function obtenerProductosFiltrados($conn, $categoria, $subcategoria) {
 
 $productos_filtrados = obtenerProductosFiltrados($conn, $categoria, $subcategoria);
 
+
+
+
 ?>
+
 
 <!DOCTYPE html>
 <html lang="es">
@@ -367,7 +371,8 @@ $productos_filtrados = obtenerProductosFiltrados($conn, $categoria, $subcategori
                                     <span>¿No tienes cuenta?</span>
                                     <a href="#" id="mostrar-registro">Regístrate aquí</a>
                                 </div>
-                            </div>                        <!-- FORMULARIO DE REGISTRO -->
+                            </div> 
+                                                   <!-- FORMULARIO DE REGISTRO -->
                         <div id="register-form" class="auth-form auth-form-oculto">
                             <h3>Crear Cuenta</h3>
                             
@@ -439,7 +444,7 @@ $productos_filtrados = obtenerProductosFiltrados($conn, $categoria, $subcategori
                             </div>
                         </div>
 
-                        <!-- FORMULARIO DE VERIFICACIÓN -->
+                      
                         
                         </div> <!-- Cierre de auth-form-container -->
                     </div>
@@ -506,84 +511,80 @@ $productos_filtrados = obtenerProductosFiltrados($conn, $categoria, $subcategori
         </div>
     </div>
 
-<main class="productos" role="main" aria-label="Lista de productos">
-    <?php
-    $sql = "SELECT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, a.Precio, a.Precio_Unitario, i.ruta
-            FROM articulo a
-            LEFT JOIN img i ON a.IdProducto = i.idProd";
-    $result = $conn->query($sql);
-
-    if ($result && $result->num_rows > 0) {
-        $contador = 0;
-        while ($row = $result->fetch_assoc()) {
-            $imgSrc = $row['ruta'] ? htmlspecialchars($row['ruta']) : "";
-            $hasImage = !empty($row['ruta']);
-            $badgeClass = '';
-            $badgeText = '';
-            if ($contador < 3) {
-                $badgeClass = 'badge-new';
-                $badgeText = 'Nuevo';
-            } elseif ($row['Precio'] < 5) {
-                $badgeClass = 'badge-sale';
-                $badgeText = 'Oferta';
-            }
-            ?>
-            <article class="product-card" 
-                     data-id="<?php echo $row['IdProducto']; ?>" 
-                     data-name="<?php echo htmlspecialchars($row['NomProducto']); ?>" 
-                     data-price="<?php echo $row['Precio']; ?>" 
-                     data-brand="<?php echo htmlspecialchars($row['Marca']); ?>">
-                <div class="product-image-container <?php echo !$hasImage ? 'no-image' : ''; ?>">
-                    <?php if ($hasImage): ?>
-                        <img src="<?php echo $imgSrc; ?>" 
-                             alt="<?php echo htmlspecialchars($row['NomProducto']); ?>" 
-                             class="product-image" 
-                             loading="lazy" 
-                             onerror="this.style.display='none'; this.parentElement.classList.add('image-error');">
-                    <?php else: ?>
-                        <div class="no-image-placeholder">
-                            <div class="no-image-icon">📷</div>
-                            <div class="no-image-text">Sin imagen</div>
-                        </div>
-                    <?php endif; ?>
-                    <?php if (!empty($badgeClass)): ?>
-                        <div class="product-badge <?php echo $badgeClass; ?>"><?php echo $badgeText; ?></div>
-                    <?php endif; ?>
-                    <div class="product-actions">
-                        <button class="action-btn" title="Vista rápida">👁️</button>
-                        <button class="action-btn" title="Agregar a favoritos">♡</button>
-                    </div>
-                </div>
-                <div class="product-info">
-                    <div class="product-brand"><?php echo htmlspecialchars($row['Marca']); ?></div>
-                    <h3 class="product-title"><?php echo htmlspecialchars($row['NomProducto']); ?></h3>
-                    <div class="product-price-container">
-                        <span class="product-price">$<?php echo number_format($row['Precio'], 2); ?></span>
-                        <span class="product-price-unit">c/u</span>
-                    </div>
-                    <button class="add-to-cart-btn" data-id="<?php echo $row['IdProducto']; ?>">Agregar al Carrito</button>
-                </div>
-            </article>
+ <div class="products-container">
+        <div class="products-grid" id="products-grid">
             <?php
-            $contador++;
-        }
-    } else {
-        echo "<p>No hay productos disponibles</p>";
-    }
+            if (!empty($productos_a_mostrar)) {
+                $contador = 0;
+                foreach ($productos_a_mostrar as $row) {
+                    $imgSrc = $row['ruta'] ? htmlspecialchars($row['ruta']) : "";
+                    $hasImage = !empty($row['ruta']);
+                    $badgeClass = '';
+                    $badgeText = '';
+                    if ($contador < 3) {
+                        $badgeClass = 'badge-new';
+                        $badgeText = 'Nuevo';
+                    } elseif ($row['Precio'] < 5) {
+                        $badgeClass = 'badge-sale';
+                        $badgeText = 'Oferta';
+                    }
+                    ?>
+                    <article class="product-card" 
+                             data-name="<?php echo htmlspecialchars($row['NomProducto']); ?>" 
+                             data-price="<?php echo $row['Precio']; ?>" 
+                             data-brand="<?php echo htmlspecialchars($row['Marca']); ?>">
+                        <div class="product-image-container <?php echo !$hasImage ? 'no-image' : ''; ?>">
+                            <?php if ($hasImage): ?>
+                                <img src="<?php echo $imgSrc; ?>" 
+                                     alt="<?php echo htmlspecialchars($row['NomProducto']); ?>" 
+                                     class="product-image" 
+                                     loading="lazy" 
+                                     onerror="this.style.display='none'; this.parentElement.classList.add('image-error');">
+                            <?php else: ?>
+                                <div class="no-image-placeholder">
+                                    <div class="no-image-icon">📷</div>
+                                    <div class="no-image-text">Sin imagen</div>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (!empty($badgeClass)): ?>
+                                <div class="product-badge <?php echo $badgeClass; ?>"><?php echo $badgeText; ?></div>
+                            <?php endif; ?>
+                            <div class="product-actions">
+                                <button class="action-btn" title="Vista rápida">👁️</button>
+                                <button class="action-btn" title="Agregar a favoritos">♡</button>
+                            </div>
+                        </div>
+                        <div class="product-info">
+                            <div class="product-brand"><?php echo htmlspecialchars($row['Marca']); ?></div>
+                            <h3 class="product-title"><?php echo htmlspecialchars($row['NomProducto']); ?></h3>
+                            <div class="product-price-container">
+                                <span class="product-price">$<?php echo number_format($row['Precio'], 2); ?></span>
+                                <span class="product-price-unit">c/u</span>
+                            </div>
+                            <button class="add-to-cart-btn" data-id="<?php echo $row['IdProducto']; ?>">Agregar al Carrito</button>
+                        </div>
+                    </article>
+                    <?php
+                    $contador++;
+                }
+            } else {
+                echo '<p>No hay productos disponibles</p>';
+            }
     ?>
 
     <!-- Estado vacío (oculto por defecto) -->
-    <div class="empty-state" id="empty-state" style="display: none;">
-        <div class="empty-state-icon">🔍</div>
-        <h2>No se encontraron productos</h2>
-        <p>No hay productos que coincidan con tu búsqueda.</p>
-        <div class="suggestions-grid">
-            <a href="productos.php?categoria=ARTE" class="suggestion-link">Productos de Arte</a>
-            <a href="productos.php?categoria=ESCOLAR" class="suggestion-link">Artículos Escolares</a>
-            <a href="productos.php?categoria=OFICINA" class="suggestion-link">Productos de Oficina</a>
-            <a href="home.php" class="suggestion-link">Ver todos los productos</a>
+     <!-- Estado vacío (ejemplo, oculto por defecto) -->
+        <div class="empty-state" style="display: none;" id="empty-state">
+            <div class="empty-state-icon">🎨</div>
+            <h2>No se encontraron productos</h2>
+            <p>No hay productos disponibles que coincidan con tu búsqueda.</p>
+            <div class="suggestions-grid">
+                <a href="#" class="suggestion-link">Productos de Arte</a>
+                <a href="#" class="suggestion-link">Artículos Escolares</a>
+                <a href="#" class="suggestion-link">Productos de Oficina</a>
+                <a href="#" class="suggestion-link">Ver todos</a>
+            </div>
         </div>
-    </div>
 </main>
 
 <nav class="paginacion" aria-label="Navegación de páginas">
