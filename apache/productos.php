@@ -554,8 +554,7 @@ if (empty($categoria) && empty($subcategoria)) {
                                 <div class="product-badge <?php echo $badgeClass; ?>"><?php echo $badgeText; ?></div>
                             <?php endif; ?>
                             <div class="product-actions">
-                                <button class="action-btn" title="Vista rápida">👁️</button>
-                                <button class="action-btn" title="Agregar a favoritos">♡</button>
+                                
                             </div>
                         </div>
                         <div class="product-info">
