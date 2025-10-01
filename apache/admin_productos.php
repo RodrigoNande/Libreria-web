@@ -12,7 +12,7 @@ if (!estaLogueado() || !esAdmin()) {
 
 $usuarioActual = obtenerUsuarioActual();
 
-// Función para obtener todos los productos
+// Función para obtener todos los productos con sus categorías
 function obtenerProductos($conn) {
     $sql = "SELECT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, a.Precio, a.Precio_Unitario, a.Stock, i.ruta
             FROM articulo a
@@ -31,11 +31,10 @@ function obtenerProductos($conn) {
     return $productos;
 }
 
-// Función para obtener categorías principales
+// Función para obtener categorías (sin filtrar por padre)
 function obtenerCategorias($conn) {
-    $sql = "SELECT Id, Nombre_Categoria 
+    $sql = "SELECT Id, Nombre_Categoria, Descripcion, IdCategoriaPadre 
             FROM Categoria 
-            WHERE IdCategoriaPadre IS NULL 
             ORDER BY Nombre_Categoria";
     
     $result = $conn->query($sql);
@@ -45,16 +44,30 @@ function obtenerCategorias($conn) {
         while ($row = $result->fetch_assoc()) {
             $categorias[] = $row;
         }
-    } else {
-        // Fallback si no hay categorías en BD
-        $categorias = [
-            ['Id' => 1, 'Nombre_Categoria' => 'GENERAL'],
-            ['Id' => 2, 'Nombre_Categoria' => 'OFICINA'],
-            ['Id' => 3, 'Nombre_Categoria' => 'ESCOLAR']
-        ];
     }
     
     return $categorias;
+}
+
+// Función para asignar producto a categoría
+function asignarProductoCategoria($conn, $idProducto, $idCategoria) {
+    // Primero verificar si ya existe la relación
+    $checkStmt = $conn->prepare("SELECT COUNT(*) as count FROM producto_categoria WHERE Id_Producto = ? AND Id_Categoria = ?");
+    $checkStmt->bind_param("ss", $idProducto, $idCategoria);
+    $checkStmt->execute();
+    $result = $checkStmt->get_result();
+    $exists = $result->fetch_assoc()['count'] > 0;
+    $checkStmt->close();
+    
+    if (!$exists) {
+        $stmt = $conn->prepare("INSERT INTO producto_categoria (Id_Producto, Id_Categoria) VALUES (?, ?)");
+        $stmt->bind_param("ss", $idProducto, $idCategoria);
+        $success = $stmt->execute();
+        $stmt->close();
+        return $success;
+    }
+    
+    return true;
 }
 
 // Procesar acciones POST
@@ -72,6 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $precio = floatval($_POST['precio'] ?? 0);
             $precio_unitario = floatval($_POST['precio_unitario'] ?? 0);
             $stock = intval($_POST['stock'] ?? 0);
+            $idCategoria = trim($_POST['id_categoria'] ?? '');
             
             if (empty($nombre) || empty($marca) || empty($tipo) || $precio <= 0) {
                 $mensaje = 'Por favor complete todos los campos obligatorios';
@@ -84,12 +98,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param("ssssddi", $idProducto, $nombre, $marca, $tipo, $precio, $precio_unitario, $stock);
                 
                 if ($stmt->execute()) {
+                    // Asignar categoría si se seleccionó
+                    if (!empty($idCategoria)) {
+                        asignarProductoCategoria($conn, $idProducto, $idCategoria);
+                    }
+                    
                     $mensaje = 'Producto agregado exitosamente';
                     $tipoMensaje = 'exito';
                 } else {
                     $mensaje = 'Error al agregar el producto';
                     $tipoMensaje = 'error';
                 }
+                $stmt->close();
             }
             break;
             
@@ -97,10 +117,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $idProducto = $_POST['id_producto'] ?? '';
             
             if (!empty($idProducto)) {
-                // Eliminar imagen primero
+                // Eliminar relaciones en producto_categoria primero
+                $stmt = $conn->prepare("DELETE FROM producto_categoria WHERE Id_Producto = ?");
+                $stmt->bind_param("s", $idProducto);
+                $stmt->execute();
+                $stmt->close();
+                
+                // Eliminar imagen
                 $stmt = $conn->prepare("DELETE FROM img WHERE idProd = ?");
                 $stmt->bind_param("s", $idProducto);
                 $stmt->execute();
+                $stmt->close();
                 
                 // Eliminar producto
                 $stmt = $conn->prepare("DELETE FROM articulo WHERE IdProducto = ?");
@@ -113,6 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $mensaje = 'Error al eliminar el producto';
                     $tipoMensaje = 'error';
                 }
+                $stmt->close();
             }
             break;
             
@@ -124,6 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $precio = floatval($_POST['precio'] ?? 0);
             $precio_unitario = floatval($_POST['precio_unitario'] ?? 0);
             $stock = intval($_POST['stock'] ?? 0);
+            $idCategoria = trim($_POST['id_categoria'] ?? '');
             
             if (empty($idProducto) || empty($nombre) || empty($marca) || empty($tipo) || $precio <= 0) {
                 $mensaje = 'Por favor complete todos los campos obligatorios';
@@ -133,12 +162,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param("sssddis", $nombre, $marca, $tipo, $precio, $precio_unitario, $stock, $idProducto);
                 
                 if ($stmt->execute()) {
+                    // Actualizar categoría si se seleccionó
+                    if (!empty($idCategoria)) {
+                        // Eliminar relaciones anteriores
+                        $delStmt = $conn->prepare("DELETE FROM producto_categoria WHERE Id_Producto = ?");
+                        $delStmt->bind_param("s", $idProducto);
+                        $delStmt->execute();
+                        $delStmt->close();
+                        
+                        // Crear nueva relación
+                        asignarProductoCategoria($conn, $idProducto, $idCategoria);
+                    }
+                    
                     $mensaje = 'Producto modificado exitosamente';
                     $tipoMensaje = 'exito';
                 } else {
                     $mensaje = 'Error al modificar el producto';
                     $tipoMensaje = 'error';
                 }
+                $stmt->close();
             }
             break;
     }
@@ -156,7 +198,7 @@ $categorias = obtenerCategorias($conn);
     <title>Panel de Administración - Productos</title>
     <link rel="stylesheet" href="estilopruebas.css">
     <style>
-        :root {
+      :root {
             --primary-color: #1a365d;
             --primary-light: #2d3748;
             --primary-dark: #0f1419;
@@ -535,7 +577,7 @@ $categorias = obtenerCategorias($conn);
             font-weight: 600;
         }
 
-        /* Barra de búsqueda para admin */
+        /* Barra de bÃºsqueda para admin */
         .search-container-admin {
             margin-bottom: 2rem;
             position: relative;
@@ -1042,195 +1084,108 @@ $categorias = obtenerCategorias($conn);
         <div class="admin-panel">
             <header class="admin-header">
                 <div class="admin-title">
-                    <span class="icon">📊</span>
-                    <h1>Panel de Administración</h1>
+                    <h1>Panel de Administración - Productos</h1>
                 </div>
-                <div class="admin-user-info">
-                    <div class="welcome-text">
-                        Bienvenido, <span class="user-name"><?php echo htmlspecialchars($usuarioActual['Nombre'] ?? 'Admin'); ?></span>
-                    </div>
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <a href="verificar_db.php" style="
-                            background: rgba(255, 255, 255, 0.1);
-                            backdrop-filter: blur(10px);
-                            border: 1px solid rgba(255, 255, 255, 0.2);
-                            color: white;
-                            padding: 0.5rem 1rem;
-                            border-radius: var(--radius-md);
-                            text-decoration: none;
-                            font-weight: 500;
-                            font-size: 0.85rem;
-                            transition: var(--transition-normal);
-                        " title="Verificar estado de la base de datos">🔍 Verificar BD</a>
-                        <a href="test_crud.php" style="
-                            background: rgba(255, 255, 255, 0.1);
-                            backdrop-filter: blur(10px);
-                            border: 1px solid rgba(255, 255, 255, 0.2);
-                            color: white;
-                            padding: 0.5rem 1rem;
-                            border-radius: var(--radius-md);
-                            text-decoration: none;
-                            font-weight: 500;
-                            font-size: 0.85rem;
-                            transition: var(--transition-normal);
-                        " title="Probar operaciones CRUD">🧪 Test CRUD</a>
-                        <a href="home.php" class="btn-volver">
-                            <span>🏠</span>
-                            Volver a la Tienda
-                        </a>
-                    </div>
-                </div>
+                <a href="home.php" class="btn-volver">Volver a la Tienda</a>
             </header>
 
             <main class="admin-content">
-                <!-- Stats Cards -->
                 <section class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-icon">📦</div>
-                        <div class="stat-info">
-                            <h3><?php echo count($productos); ?></h3>
-                            <p>Productos Totales</p>
-                        </div>
+                        <h3><?php echo count($productos); ?></h3>
+                        <p>Productos Totales</p>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">💰</div>
-                        <div class="stat-info">
-                            <h3>$<?php echo number_format(array_sum(array_column($productos, 'Precio')), 2); ?></h3>
-                            <p>Valor Total</p>
-                        </div>
+                        <h3><?php echo count($categorias); ?></h3>
+                        <p>Categorías</p>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">📈</div>
-                        <div class="stat-info">
-                            <h3><?php echo array_sum(array_column($productos, 'Stock')); ?></h3>
-                            <p>Unidades en Stock</p>
-                        </div>
+                        <h3><?php echo array_sum(array_column($productos, 'Stock')); ?></h3>
+                        <p>Unidades en Stock</p>
                     </div>
                 </section>
 
                 <?php if ($mensaje): ?>
                     <div class="mensaje <?php echo $tipoMensaje; ?>">
-                        <span><?php echo $tipoMensaje === 'exito' ? '✅' : '❌'; ?></span>
                         <?php echo htmlspecialchars($mensaje); ?>
                     </div>
                 <?php endif; ?>
 
-                <!-- Formulario para agregar producto -->
                 <section class="formulario-producto">
-                    <div class="form-header">
-                        <span class="form-icon">➕</span>
-                        <h3>Agregar Nuevo Producto</h3>
-                    </div>
+                    <h3>Agregar Nuevo Producto</h3>
                     <form method="POST">
                         <input type="hidden" name="accion" value="agregar">
 
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="nombre">Nombre del Producto *</label>
-                                <input type="text" id="nombre" name="nombre" placeholder="Ej: Cuaderno Profesional" required>
+                                <input type="text" id="nombre" name="nombre" required>
                             </div>
                             <div class="form-group">
                                 <label for="marca">Marca *</label>
-                                <input type="text" id="marca" name="marca" placeholder="Ej: Faber-Castell" required>
+                                <input type="text" id="marca" name="marca" required>
                             </div>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="tipo">Categoría *</label>
-                                <select id="tipo" name="tipo" required>
+                                <label for="tipo">Tipo de Producto *</label>
+                                <input type="text" id="tipo" name="tipo" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="id_categoria">Categoría</label>
+                                <select id="id_categoria" name="id_categoria">
                                     <option value="">Seleccionar categoría...</option>
                                     <?php foreach ($categorias as $categoria): ?>
-                                        <option value="<?php echo htmlspecialchars($categoria['Nombre_Categoria']); ?>">
+                                        <option value="<?php echo htmlspecialchars($categoria['Id']); ?>">
                                             <?php echo htmlspecialchars($categoria['Nombre_Categoria']); ?>
+                                            <?php if (!empty($categoria['Descripcion'])): ?>
+                                                - <?php echo htmlspecialchars(substr($categoria['Descripcion'], 0, 30)); ?>
+                                            <?php endif; ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
-                                <small style="color: var(--text-medium); font-size: 0.8rem; margin-top: 0.25rem; display: block;">
-                                    Selecciona la categoría a la que pertenece el producto
-                                </small>
-                            </div>
-                            <div class="form-group">
-                                <label for="stock">Stock Inicial</label>
-                                <input type="number" id="stock" name="stock" placeholder="0" min="0" value="0">
                             </div>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="precio">Precio de Venta *</label>
-                                <input type="number" id="precio" name="precio" placeholder="0.00" step="0.01" min="0" required>
+                                <input type="number" id="precio" name="precio" step="0.01" min="0" required>
                             </div>
                             <div class="form-group">
                                 <label for="precio_unitario">Precio Unitario</label>
-                                <input type="number" id="precio_unitario" name="precio_unitario" placeholder="0.00" step="0.01" min="0">
+                                <input type="number" id="precio_unitario" name="precio_unitario" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="stock">Stock Inicial</label>
+                                <input type="number" id="stock" name="stock" min="0" value="0">
                             </div>
                         </div>
 
-                        <button type="submit" class="btn-agregar">
-                            <span>📦</span>
-                            Agregar Producto
-                        </button>
+                        <button type="submit" class="btn-agregar">Agregar Producto</button>
                     </form>
                 </section>
 
-                <!-- Lista de productos -->
                 <section class="productos-section">
-                    <div class="productos-header">
-                        <h2 class="productos-title">Productos Existentes</h2>
-                        <span class="productos-count"><?php echo count($productos); ?> productos</span>
-                    </div>
-
-                    <!-- Barra de búsqueda -->
-                    <div class="search-container-admin">
-                        <input type="text" class="search-input-admin" placeholder="Buscar productos por nombre, marca o tipo..." id="search-input-admin">
-                        <button class="search-btn-admin" id="search-btn-admin">🔍</button>
-                    </div>
-
-                    <div class="productos-grid" id="productos-grid">
-                        <?php foreach ($productos as $producto):
-                            $stockStatus = $producto['Stock'] > 50 ? 'high' : ($producto['Stock'] > 10 ? 'medium' : 'low');
-                            $stockIcon = $producto['Stock'] > 50 ? '📈' : ($producto['Stock'] > 10 ? '⚡' : '⚠️');
-                            $hasImage = !empty($producto['ruta']);
-                        ?>
+                    <h2>Productos Existentes (<?php echo count($productos); ?>)</h2>
+                    <div class="productos-grid">
+                        <?php foreach ($productos as $producto): ?>
                             <article class="producto-admin">
-                                <div class="product-image-container <?php echo !$hasImage ? 'no-image' : ''; ?>">
-                                    <?php if ($hasImage): ?>
-                                        <img src="<?php echo $producto['ruta']; ?>"
-                                             alt="<?php echo htmlspecialchars($producto['NomProducto']); ?>"
-                                             onerror="this.style.display='none'; this.parentElement.classList.add('image-error');">
+                                <div class="product-image-container">
+                                    <?php if (!empty($producto['ruta'])): ?>
+                                        <img src="<?php echo $producto['ruta']; ?>" alt="<?php echo htmlspecialchars($producto['NomProducto']); ?>">
                                     <?php else: ?>
-                                        <div class="no-image-placeholder">
-                                            <div class="no-image-icon">📷</div>
-                                            <div class="no-image-text">Sin imagen</div>
-                                        </div>
+                                        <p>Sin imagen</p>
                                     <?php endif; ?>
                                 </div>
 
                                 <div class="producto-content">
                                     <h4><?php echo htmlspecialchars($producto['NomProducto']); ?></h4>
-
-                                    <div class="producto-info">
-                                        <p>
-                                            <span class="info-label">Marca:</span>
-                                            <span class="info-value"><?php echo htmlspecialchars($producto['Marca']); ?></span>
-                                        </p>
-                                        <p>
-                                            <span class="info-label">Tipo:</span>
-                                            <span class="info-value"><?php echo htmlspecialchars($producto['TipoProducto']); ?></span>
-                                        </p>
-                                        <p>
-                                            <span class="info-label">Precio:</span>
-                                            <span class="info-value price-highlight">$<?php echo number_format($producto['Precio'], 2); ?></span>
-                                        </p>
-                                        <p>
-                                            <span class="info-label">Stock:</span>
-                                            <span class="stock-status stock-<?php echo $stockStatus; ?>">
-                                                <span><?php echo $stockIcon; ?></span>
-                                                <?php echo $producto['Stock']; ?> unidades
-                                            </span>
-                                        </p>
-                                    </div>
+                                    <p><strong>Marca:</strong> <?php echo htmlspecialchars($producto['Marca']); ?></p>
+                                    <p><strong>Tipo:</strong> <?php echo htmlspecialchars($producto['TipoProducto']); ?></p>
+                                    <p><strong>Precio:</strong> $<?php echo number_format($producto['Precio'], 2); ?></p>
+                                    <p><strong>Stock:</strong> <?php echo $producto['Stock']; ?> unidades</p>
 
                                     <div class="producto-acciones">
                                         <button class="btn-admin btn-modificar"
@@ -1241,13 +1196,11 @@ $categorias = obtenerCategorias($conn);
                                                                              <?php echo $producto['Precio']; ?>,
                                                                              <?php echo $producto['Precio_Unitario']; ?>,
                                                                              <?php echo $producto['Stock']; ?>)">
-                                            <span>✏️</span>
                                             Modificar
                                         </button>
 
                                         <button class="btn-admin btn-eliminar"
                                                 onclick="confirmarEliminar('<?php echo $producto['IdProducto']; ?>', '<?php echo htmlspecialchars($producto['NomProducto']); ?>')">
-                                            <span>🗑️</span>
                                             Eliminar
                                         </button>
                                     </div>
@@ -1260,11 +1213,10 @@ $categorias = obtenerCategorias($conn);
         </div>
     </div>
     
-    <!-- Modal para modificar producto -->
     <div id="modalModificar" class="modal">
         <div class="modal-content">
             <span class="cerrar-modal" onclick="cerrarModal()">&times;</span>
-            <h3>✏️ Modificar Producto</h3>
+            <h3>Modificar Producto</h3>
 
             <form method="POST">
                 <input type="hidden" name="accion" value="modificar">
@@ -1272,81 +1224,53 @@ $categorias = obtenerCategorias($conn);
 
                 <div class="form-group">
                     <label for="mod_nombre">Nombre del Producto *</label>
-                    <input type="text" id="mod_nombre" name="nombre" placeholder="Ej: Cuaderno Profesional" required>
+                    <input type="text" id="mod_nombre" name="nombre" required>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label for="mod_marca">Marca *</label>
-                        <input type="text" id="mod_marca" name="marca" placeholder="Ej: Faber-Castell" required>
+                        <input type="text" id="mod_marca" name="marca" required>
                     </div>
                     <div class="form-group">
-                        <label for="mod_tipo">Categoría *</label>
-                        <select id="mod_tipo" name="tipo" required>
-                            <option value="">Seleccionar categoría...</option>
-                            <?php foreach ($categorias as $categoria): ?>
-                                <option value="<?php echo htmlspecialchars($categoria['Nombre_Categoria']); ?>">
-                                    <?php echo htmlspecialchars($categoria['Nombre_Categoria']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <small style="color: var(--text-medium); font-size: 0.8rem; margin-top: 0.25rem; display: block;">
-                            Selecciona la categoría a la que pertenece el producto
-                        </small>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="mod_precio">Precio de Venta *</label>
-                        <input type="number" id="mod_precio" name="precio" placeholder="0.00" step="0.01" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="mod_precio_unitario">Precio Unitario</label>
-                        <input type="number" id="mod_precio_unitario" name="precio_unitario" placeholder="0.00" step="0.01" min="0">
+                        <label for="mod_tipo">Tipo *</label>
+                        <input type="text" id="mod_tipo" name="tipo" required>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="mod_stock">Stock</label>
-                    <input type="number" id="mod_stock" name="stock" placeholder="0" min="0">
+                    <label for="mod_id_categoria">Categoría</label>
+                    <select id="mod_id_categoria" name="id_categoria">
+                        <option value="">Seleccionar categoría...</option>
+                        <?php foreach ($categorias as $categoria): ?>
+                            <option value="<?php echo htmlspecialchars($categoria['Id']); ?>">
+                                <?php echo htmlspecialchars($categoria['Nombre_Categoria']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
 
-                <button type="submit" class="btn-agregar">
-                    <span>💾</span>
-                    Guardar Cambios
-                </button>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="mod_precio">Precio *</label>
+                        <input type="number" id="mod_precio" name="precio" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="mod_precio_unitario">Precio Unitario</label>
+                        <input type="number" id="mod_precio_unitario" name="precio_unitario" step="0.01" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="mod_stock">Stock</label>
+                        <input type="number" id="mod_stock" name="stock" min="0">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-agregar">Guardar Cambios</button>
             </form>
         </div>
     </div>
     
     <script>
-        // Animación de entrada para las tarjetas de productos
-        document.addEventListener('DOMContentLoaded', function() {
-            const productCards = document.querySelectorAll('.producto-admin');
-            productCards.forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                setTimeout(() => {
-                    card.style.transition = 'all 0.6s ease';
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, index * 100);
-            });
-
-            // Auto-hide mensajes después de 5 segundos
-            const mensajes = document.querySelectorAll('.mensaje');
-            mensajes.forEach(mensaje => {
-                setTimeout(() => {
-                    mensaje.style.transition = 'all 0.5s ease';
-                    mensaje.style.opacity = '0';
-                    setTimeout(() => {
-                        mensaje.style.display = 'none';
-                    }, 500);
-                }, 5000);
-            });
-        });
-
         function abrirModalModificar(id, nombre, marca, tipo, precio, precioUnitario, stock) {
             document.getElementById('mod_id_producto').value = id;
             document.getElementById('mod_nombre').value = nombre;
@@ -1355,201 +1279,31 @@ $categorias = obtenerCategorias($conn);
             document.getElementById('mod_precio').value = precio;
             document.getElementById('mod_precio_unitario').value = precioUnitario;
             document.getElementById('mod_stock').value = stock;
-
             document.getElementById('modalModificar').style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Prevenir scroll del body
         }
 
         function cerrarModal() {
-            const modal = document.getElementById('modalModificar');
-            modal.style.animation = 'slideOutScale 0.3s ease-out';
-            setTimeout(() => {
-                modal.style.display = 'none';
-                modal.style.animation = '';
-                document.body.style.overflow = 'auto'; // Restaurar scroll del body
-            }, 300);
+            document.getElementById('modalModificar').style.display = 'none';
         }
 
         function confirmarEliminar(id, nombre) {
-            // Crear modal de confirmación personalizado
-            const confirmModal = document.createElement('div');
-            confirmModal.innerHTML = `
-                <div style="
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.6);
-                    backdrop-filter: blur(4px);
-                    z-index: 10001;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    animation: fadeIn 0.3s ease-out;
-                ">
-                    <div style="
-                        background: white;
-                        padding: 2rem;
-                        border-radius: 16px;
-                        box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
-                        max-width: 400px;
-                        width: 90%;
-                        text-align: center;
-                        animation: slideInScale 0.4s ease-out;
-                    ">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
-                        <h3 style="margin: 0 0 1rem 0; color: #1a202c;">¿Eliminar Producto?</h3>
-                        <p style="margin: 0 0 2rem 0; color: #4a5568;">
-                            ¿Estás seguro de que quieres eliminar <strong>"${nombre}"</strong>?<br>
-                            <small style="color: #e53e3e;">Esta acción no se puede deshacer.</small>
-                        </p>
-                        <div style="display: flex; gap: 1rem;">
-                            <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
-                                flex: 1;
-                                padding: 0.75rem 1rem;
-                                background: #e2e8f0;
-                                color: #4a5568;
-                                border: none;
-                                border-radius: 8px;
-                                cursor: pointer;
-                                font-weight: 600;
-                                transition: all 0.3s ease;
-                            ">Cancelar</button>
-                            <button onclick="eliminarProducto('${id}'); this.parentElement.parentElement.parentElement.remove()" style="
-                                flex: 1;
-                                padding: 0.75rem 1rem;
-                                background: linear-gradient(135deg, #e53e3e, #c53030);
-                                color: white;
-                                border: none;
-                                border-radius: 8px;
-                                cursor: pointer;
-                                font-weight: 600;
-                                transition: all 0.3s ease;
-                            ">Eliminar</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(confirmModal);
+            if (confirm('¿Estás seguro de eliminar "' + nombre + '"?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.innerHTML = `
+                    <input type="hidden" name="accion" value="eliminar">
+                    <input type="hidden" name="id_producto" value="${id}">
+                `;
+                document.body.appendChild(form);
+                form.submit();
+            }
         }
 
-        function eliminarProducto(id) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.innerHTML = `
-                <input type="hidden" name="accion" value="eliminar">
-                <input type="hidden" name="id_producto" value="${id}">
-            `;
-            document.body.appendChild(form);
-            form.submit();
-        }
-
-        // Cerrar modal al hacer clic fuera
         window.onclick = function(event) {
             const modal = document.getElementById('modalModificar');
             if (event.target === modal) {
                 cerrarModal();
             }
-        }
-
-        // Cerrar modal con tecla Escape
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                const modal = document.getElementById('modalModificar');
-                if (modal.style.display === 'block') {
-                    cerrarModal();
-                }
-            }
-        });
-
-        // Mejorar UX de formularios
-        document.querySelectorAll('input, select').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'translateY(-2px)';
-            });
-
-            input.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'translateY(0)';
-            });
-        });
-
-        // ===================================================
-        // FUNCIONALIDAD DE BÚSQUEDA
-        // ===================================================
-        const searchInputAdmin = document.getElementById('search-input-admin');
-        const searchBtnAdmin = document.getElementById('search-btn-admin');
-        const productosGrid = document.getElementById('productos-grid');
-        const productosCount = document.querySelector('.productos-count');
-
-        function searchProductsAdmin() {
-            const searchTerm = searchInputAdmin.value.toLowerCase().trim();
-            const productCards = productosGrid.querySelectorAll('.producto-admin');
-            let visibleCount = 0;
-
-            productCards.forEach(card => {
-                const productName = card.querySelector('h4').textContent.toLowerCase();
-                const productInfo = card.querySelector('.producto-info').textContent.toLowerCase();
-
-                if (productName.includes(searchTerm) || productInfo.includes(searchTerm)) {
-                    card.style.display = 'block';
-                    card.style.animation = 'fadeInUp 0.5s ease-out';
-                    visibleCount++;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-
-            // Actualizar contador
-            productosCount.textContent = `${visibleCount} producto${visibleCount !== 1 ? 's' : ''}`;
-
-            // Mostrar mensaje si no hay resultados
-            let noResultsMsg = productosGrid.querySelector('.no-results-message');
-            if (visibleCount === 0 && searchTerm !== '') {
-                if (!noResultsMsg) {
-                    noResultsMsg = document.createElement('div');
-                    noResultsMsg.className = 'no-results-message';
-                    noResultsMsg.innerHTML = `
-                        <div style="
-                            text-align: center;
-                            padding: 3rem 2rem;
-                            background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
-                            border-radius: var(--radius-lg);
-                            border: 2px dashed var(--border-color);
-                            margin: 2rem 0;
-                        ">
-                            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">🔍</div>
-                            <h3 style="color: var(--text-dark); margin: 0 0 0.5rem 0;">No se encontraron productos</h3>
-                            <p style="color: var(--text-medium); margin: 0;">
-                                No hay productos que coincidan con "<strong>${searchTerm}</strong>"
-                            </p>
-                        </div>
-                    `;
-                    productosGrid.appendChild(noResultsMsg);
-                }
-            } else {
-                if (noResultsMsg) {
-                    noResultsMsg.remove();
-                }
-            }
-        }
-
-        // Event listeners para búsqueda
-        if (searchInputAdmin) {
-            searchInputAdmin.addEventListener('input', searchProductsAdmin);
-        }
-
-        if (searchBtnAdmin) {
-            searchBtnAdmin.addEventListener('click', searchProductsAdmin);
-        }
-
-        // Búsqueda con Enter
-        if (searchInputAdmin) {
-            searchInputAdmin.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    searchProductsAdmin();
-                }
-            });
         }
     </script>
 </body>

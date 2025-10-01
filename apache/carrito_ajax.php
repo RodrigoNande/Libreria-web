@@ -86,6 +86,10 @@ if (!empty($id) && $accion === 'agregar') {
             }
             
             $response['exito'] = true;
+
+
+
+            
             $response['mensaje'] = 'Producto agregado correctamente';
             $response['cantidad_total'] = $cantidadTotal;
             $response['carrito_actual'] = $_SESSION['carrito'];

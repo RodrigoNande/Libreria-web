@@ -584,6 +584,7 @@ if (empty($categoria) && empty($subcategoria)) {
             }
             ?>
         </div>
+        
 
     <!-- Estado vacío (oculto por defecto) -->
      <!-- Estado vacío (ejemplo, oculto por defecto) -->
