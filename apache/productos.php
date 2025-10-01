@@ -37,7 +37,7 @@ if (isset($_SESSION['carrito'])) {
 function obtenerCategoriasConSubcategorias($conn) {
     $categorias = [];
     
-    // 1. Obtener categorías principales
+    // 1. Obtener categorías principales (sin padre)
     $sql_categorias = "
         SELECT Id, Nombre_Categoria 
         FROM Categoria 
@@ -53,138 +53,134 @@ function obtenerCategoriasConSubcategorias($conn) {
             $categoria_id = $categoria_padre['Id'];
             $categoria_nombre = $categoria_padre['Nombre_Categoria'];
             
-            // Obtener subcategorías
+            // Obtener subcategorías que tienen esta categoría como padre
             $sql_subcategorias = "
-                SELECT Nombre_Categoria
+                SELECT Id, Nombre_Categoria
                 FROM Categoria 
-                WHERE IdCategoriaPadre = '$categoria_id'
+                WHERE IdCategoriaPadre = ?
                 ORDER BY Nombre_Categoria
             ";
             
-            $result_subcategorias = mysqli_query($conn, $sql_subcategorias);
+            $stmt_sub = mysqli_prepare($conn, $sql_subcategorias);
+            mysqli_stmt_bind_param($stmt_sub, "s", $categoria_id);
+            mysqli_stmt_execute($stmt_sub);
+            $result_subcategorias = mysqli_stmt_get_result($stmt_sub);
+            
             $subcategorias = [];
             
+            // Solo agregar subcategorías reales (no productos)
             if ($result_subcategorias && mysqli_num_rows($result_subcategorias) > 0) {
                 while ($subcategoria = mysqli_fetch_assoc($result_subcategorias)) {
                     $subcategorias[] = $subcategoria['Nombre_Categoria'];
                 }
             }
+            // ✅ Si no hay subcategorías, simplemente deja el array vacío
             
-            // Si no hay subcategorías, obtener productos directamente
-            if (empty($subcategorias)) {
-                $sql_productos = "
-                    SELECT DISTINCT a.NomProducto
-                    FROM articulo a
-                    JOIN producto_categoria pc ON a.IdProducto = pc.Id_Producto
-                    JOIN Categoria c ON pc.Id_Categoria = c.Id
-                    WHERE c.Id = '$categoria_id'
-                    ORDER BY a.NomProducto
-                    LIMIT 8
-                ";
-                
-                $result_productos = mysqli_query($conn, $sql_productos);
-                if ($result_productos && mysqli_num_rows($result_productos) > 0) {
-                    while ($producto = mysqli_fetch_assoc($result_productos)) {
-                        $subcategorias[] = $producto['NomProducto'];
-                    }
-                }
-            }
+            mysqli_stmt_close($stmt_sub);
             
             // Agregar al array de categorías
             $categorias[$categoria_nombre] = $subcategorias;
         }
-    } else {
-        // Fallback a datos estáticos si no hay datos en BD
-        $categorias = [
-            "ARTE" => [
-                "Acrílico profesional",
-                "Artículo para arte",
-                "Acrílicos para tela",
-                "Acrílica neon",
-                "Barniz",
-                "Barniz en aerosol"
-            ],
-            "PAPELES Y DERIVADOS" => [
-                "Bollo de lana",
-                "Carboncillos",
-                "Fieltro",
-                "Gesso transparente",
-                "Lápiz de color acuarelables",
-                "Lienzo"
-            ],
-            "ESCOLAR" => [
-                "Lápiz graduado",
-                "Lápiz 3 técnicas",
-                "Laca plástica",
-                "Óleo",
-                "Plumillas"
-            ],
-            "OFICINA" => [],
-            "INFANTIL" => [
-                "Plumones profesionales",
-                "Pinceles",
-                "Prismacolor",
-                "Spray",
-                "Tela das"
-            ]
-        ];
     }
-    
+    if (!empty($subcategorias)) {
+    $categorias[$categoria_nombre] = $subcategorias;
+} else {
+    // Categoría sin subcategorías - agregar enlace directo
+    $categorias[$categoria_nombre] = ["Ver todos"];
+}
     return $categorias;
 }
 
+
 $categorias = obtenerCategoriasConSubcategorias($conn);
 
-// =============================================
-// OBTENER PRODUCTOS FILTRADOS
+// FUNCIÓN CORREGIDA PARA OBTENER PRODUCTOS FILTRADOS
 // =============================================
 function obtenerProductosFiltrados($conn, $categoria, $subcategoria) {
-    $sql = "";
     $productos = [];
     
     if (!empty($subcategoria)) {
         // Buscar por subcategoría específica
+        // Puede ser una subcategoría real O un nombre de producto
+        
+        // Primero: intentar como subcategoría
         $sql = "
             SELECT DISTINCT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, 
-                   a.Precio, a.Precio_Unitario, i.ruta
+                   a.Precio, a.Precio_Unitario, a.Stock, i.ruta
             FROM articulo a
             LEFT JOIN img i ON a.IdProducto = i.idProd
-            JOIN producto_categoria pc ON a.IdProducto = pc.Id_Producto
-            JOIN Categoria c ON pc.Id_Categoria = c.Id
-            JOIN Categoria cp ON c.IdCategoriaPadre = cp.Id
-            WHERE (c.Nombre_Categoria LIKE '%{$subcategoria}%' OR 
-                   a.NomProducto LIKE '%{$subcategoria}%' OR
-                   a.TipoProducto LIKE '%{$subcategoria}%')
+            INNER JOIN producto_categoria pc ON a.IdProducto = pc.Id_Producto
+            INNER JOIN Categoria c ON pc.Id_Categoria = c.Id
+            WHERE c.Nombre_Categoria = ?
             ORDER BY a.NomProducto
         ";
+        
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "s", $subcategoria);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $productos[] = $row;
+            }
+        } else {
+            // Si no encontró nada, buscar como nombre de producto
+            $sql_producto = "
+                SELECT DISTINCT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, 
+                       a.Precio, a.Precio_Unitario, a.Stock, i.ruta
+                FROM articulo a
+                LEFT JOIN img i ON a.IdProducto = i.idProd
+                WHERE a.NomProducto LIKE ? OR a.TipoProducto LIKE ?
+                ORDER BY a.NomProducto
+            ";
+            
+            $busqueda = "%{$subcategoria}%";
+            $stmt2 = mysqli_prepare($conn, $sql_producto);
+            mysqli_stmt_bind_param($stmt2, "ss", $busqueda, $busqueda);
+            mysqli_stmt_execute($stmt2);
+            $result2 = mysqli_stmt_get_result($stmt2);
+            
+            if ($result2 && mysqli_num_rows($result2) > 0) {
+                while ($row = mysqli_fetch_assoc($result2)) {
+                    $productos[] = $row;
+                }
+            }
+            mysqli_stmt_close($stmt2);
+        }
+        mysqli_stmt_close($stmt);
+        
     } elseif (!empty($categoria)) {
         // Buscar por categoría principal
+        // Obtener todas las subcategorías de esta categoría padre
         $sql = "
             SELECT DISTINCT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, 
-                   a.Precio, a.Precio_Unitario, i.ruta
+                   a.Precio, a.Precio_Unitario, a.Stock, i.ruta
             FROM articulo a
             LEFT JOIN img i ON a.IdProducto = i.idProd
-            JOIN producto_categoria pc ON a.IdProducto = pc.Id_Producto
-            JOIN Categoria c ON pc.Id_Categoria = c.Id
+            INNER JOIN producto_categoria pc ON a.IdProducto = pc.Id_Producto
+            INNER JOIN Categoria c ON pc.Id_Categoria = c.Id
             LEFT JOIN Categoria cp ON c.IdCategoriaPadre = cp.Id
-            WHERE (c.Nombre_Categoria LIKE '%{$categoria}%' OR 
-                   cp.Nombre_Categoria LIKE '%{$categoria}%' OR
-                   a.TipoProducto LIKE '%{$categoria}%')
+            WHERE (c.Nombre_Categoria = ? OR cp.Nombre_Categoria = ? OR c.Id = ? OR cp.Id = ?)
             ORDER BY a.NomProducto
         ";
-    }
-    
-    if (!empty($sql)) {
-        $result = mysqli_query($conn, $sql);
+        
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "ssss", $categoria, $categoria, $categoria, $categoria);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        
         if ($result && mysqli_num_rows($result) > 0) {
             while ($row = mysqli_fetch_assoc($result)) {
                 $productos[] = $row;
             }
         }
+        mysqli_stmt_close($stmt);
     }
     
     return $productos;
 }
+
 
 $productos_filtrados = obtenerProductosFiltrados($conn, $categoria, $subcategoria);
 

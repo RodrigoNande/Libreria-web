@@ -3,17 +3,7 @@ session_start();
 require_once 'conexion.php';
 require_once 'auth.php';
 
-if (isset($_GET['debug'])) {
-    echo "<pre style='background: #f0f0f0; padding: 10px; margin: 10px;'>";
-    echo "=== DEBUG SESIÓN ===\n";
-    echo "Session ID: " . session_id() . "\n";
-    echo "Usuario logueado (función): " . (estaLogueado() ? 'SÍ' : 'NO') . "\n";
-    echo "\nDatos de sesión:\n";
-    print_r($_SESSION);
-    echo "\nCookies:\n";
-    print_r($_COOKIE);
-    echo "</pre>";
-}
+
 
 $usuarioLogueado = estaLogueado();
 $esAdmin = estaLogueado() && esAdmin();
@@ -29,6 +19,10 @@ if ($usuarioLogueado) {
         ];
     }
 }
+// Obtener parámetros de URL
+$categoria = isset($_GET['categoria']) ? $_GET['categoria'] : '';
+$subcategoria = isset($_GET['subcategoria']) ? $_GET['subcategoria'] : '';
+
 
 $cantidadCarrito = 0;
 if (isset($_SESSION['carrito'])) {
@@ -37,9 +31,16 @@ if (isset($_SESSION['carrito'])) {
     }
 }
 
+// =============================================
+// FUNCIÓN PARA OBTENER CATEGORÍAS CON SUBCATEGORÍAS
+// =============================================
+// =============================================
+// FUNCIÓN PARA OBTENER CATEGORÍAS CON SUBCATEGORÍAS
+// =============================================
 function obtenerCategoriasConSubcategorias($conn) {
     $categorias = [];
     
+    // 1. Obtener categorías principales (sin padre)
     $sql_categorias = "
         SELECT Id, Nombre_Categoria 
         FROM Categoria 
@@ -50,87 +51,136 @@ function obtenerCategoriasConSubcategorias($conn) {
     $result_categorias = mysqli_query($conn, $sql_categorias);
     
     if ($result_categorias && mysqli_num_rows($result_categorias) > 0) {
+        // 2. Para cada categoría padre, obtener subcategorías
         while ($categoria_padre = mysqli_fetch_assoc($result_categorias)) {
             $categoria_id = $categoria_padre['Id'];
             $categoria_nombre = $categoria_padre['Nombre_Categoria'];
             
+            // Obtener subcategorías que tienen esta categoría como padre
             $sql_subcategorias = "
-                SELECT Nombre_Categoria
+                SELECT Id, Nombre_Categoria
                 FROM Categoria 
-                WHERE IdCategoriaPadre = '$categoria_id'
+                WHERE IdCategoriaPadre = ?
                 ORDER BY Nombre_Categoria
             ";
             
-            $result_subcategorias = mysqli_query($conn, $sql_subcategorias);
+            $stmt_sub = mysqli_prepare($conn, $sql_subcategorias);
+            mysqli_stmt_bind_param($stmt_sub, "s", $categoria_id);
+            mysqli_stmt_execute($stmt_sub);
+            $result_subcategorias = mysqli_stmt_get_result($stmt_sub);
+            
             $subcategorias = [];
             
+            // Solo agregar subcategorías reales (no productos)
             if ($result_subcategorias && mysqli_num_rows($result_subcategorias) > 0) {
                 while ($subcategoria = mysqli_fetch_assoc($result_subcategorias)) {
                     $subcategorias[] = $subcategoria['Nombre_Categoria'];
                 }
             }
+            // ✅ Si no hay subcategorías, simplemente deja el array vacío
             
-            if (empty($subcategorias)) {
-                $sql_productos = "
-                    SELECT DISTINCT a.NomProducto
-                    FROM articulo a
-                    JOIN producto_categoria pc ON a.IdProducto = pc.Id_Producto
-                    JOIN Categoria c ON pc.Id_Categoria = c.Id
-                    WHERE c.Id = '$categoria_id'
-                    ORDER BY a.NomProducto
-                    LIMIT 8
-                ";
-                
-                $result_productos = mysqli_query($conn, $sql_productos);
-                if ($result_productos && mysqli_num_rows($result_productos) > 0) {
-                    while ($producto = mysqli_fetch_assoc($result_productos)) {
-                        $subcategorias[] = $producto['NomProducto'];
-                    }
-                }
-            }
+            mysqli_stmt_close($stmt_sub);
             
+            // Agregar al array de categorías
             $categorias[$categoria_nombre] = $subcategorias;
         }
-    } else {
-        $categorias = [
-            "ARTE" => [
-                "Acrílico profesional",
-                "Artículo para arte",
-                "Acrílicos para tela",
-                "Acrílica neon",
-                "Barniz",
-                "Barniz en aerosol"
-            ],
-            "PAPELES Y DERIVADOS" => [
-                "Bollo de lana",
-                "Carboncillos",
-                "Fieltro",
-                "Gesso transparente",
-                "Lápiz de color acuarelables",
-                "Lienzo"
-            ],
-            "ESCOLAR" => [
-                "Lápiz graduado",
-                "Lápiz 3 técnicas",
-                "Laca plástica",
-                "Óleo",
-                "Plumillas"
-            ],
-            "OFICINA" => [],
-            "INFANTIL" => [
-                "Plumones profesionales",
-                "Pinceles",
-                "Prismacolor",
-                "Spray",
-                "Tela das"
-            ]
-        ];
     }
     
     return $categorias;
 }
 
 $categorias = obtenerCategoriasConSubcategorias($conn);
+
+// FUNCIÓN CORREGIDA PARA OBTENER PRODUCTOS FILTRADOS
+// =============================================
+function obtenerProductosFiltrados($conn, $categoria, $subcategoria) {
+    $productos = [];
+    
+    if (!empty($subcategoria)) {
+        // Buscar por subcategoría específica
+        // Puede ser una subcategoría real O un nombre de producto
+        
+        // Primero: intentar como subcategoría
+        $sql = "
+            SELECT DISTINCT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, 
+                   a.Precio, a.Precio_Unitario, a.Stock, i.ruta
+            FROM articulo a
+            LEFT JOIN img i ON a.IdProducto = i.idProd
+            INNER JOIN producto_categoria pc ON a.IdProducto = pc.Id_Producto
+            INNER JOIN Categoria c ON pc.Id_Categoria = c.Id
+            WHERE c.Nombre_Categoria = ?
+            ORDER BY a.NomProducto
+        ";
+        
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "s", $subcategoria);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $productos[] = $row;
+            }
+        } else {
+            // Si no encontró nada, buscar como nombre de producto
+            $sql_producto = "
+                SELECT DISTINCT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, 
+                       a.Precio, a.Precio_Unitario, a.Stock, i.ruta
+                FROM articulo a
+                LEFT JOIN img i ON a.IdProducto = i.idProd
+                WHERE a.NomProducto LIKE ? OR a.TipoProducto LIKE ?
+                ORDER BY a.NomProducto
+            ";
+            
+            $busqueda = "%{$subcategoria}%";
+            $stmt2 = mysqli_prepare($conn, $sql_producto);
+            mysqli_stmt_bind_param($stmt2, "ss", $busqueda, $busqueda);
+            mysqli_stmt_execute($stmt2);
+            $result2 = mysqli_stmt_get_result($stmt2);
+            
+            if ($result2 && mysqli_num_rows($result2) > 0) {
+                while ($row = mysqli_fetch_assoc($result2)) {
+                    $productos[] = $row;
+                }
+            }
+            mysqli_stmt_close($stmt2);
+        }
+        mysqli_stmt_close($stmt);
+        
+    } elseif (!empty($categoria)) {
+        // Buscar por categoría principal
+        // Obtener todas las subcategorías de esta categoría padre
+        $sql = "
+            SELECT DISTINCT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, 
+                   a.Precio, a.Precio_Unitario, a.Stock, i.ruta
+            FROM articulo a
+            LEFT JOIN img i ON a.IdProducto = i.idProd
+            INNER JOIN producto_categoria pc ON a.IdProducto = pc.Id_Producto
+            INNER JOIN Categoria c ON pc.Id_Categoria = c.Id
+            LEFT JOIN Categoria cp ON c.IdCategoriaPadre = cp.Id
+            WHERE (c.Nombre_Categoria = ? OR cp.Nombre_Categoria = ? OR c.Id = ? OR cp.Id = ?)
+            ORDER BY a.NomProducto
+        ";
+        
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "ssss", $categoria, $categoria, $categoria, $categoria);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        
+        if ($result && mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $productos[] = $row;
+            }
+        }
+        mysqli_stmt_close($stmt);
+    }
+    
+    return $productos;
+}
+
+
+$productos_filtrados = obtenerProductosFiltrados($conn, $categoria, $subcategoria);
+
 ?>
 
 <!DOCTYPE html>
@@ -400,42 +450,42 @@ $categorias = obtenerCategoriasConSubcategorias($conn);
 </header>
 
     <!-- Navegación Secundaria con Categorías Dinámicas -->
-    <nav class="nav-secondary">
-        <div class="nav-content">
-            <a href="home.php" class="nav-link">INICIO</a>
-            <div class="dropdown">
-                <a href="#" class="nav-link dropbtn">CATEGORÍAS ▼</a>
-                <div class="dropdown-content">
-                    <div class="categorias-container">
-                        <?php foreach ($categorias as $categoria => $subcategorias): ?>
-                            <div class="columna">
-                                <h4><?php echo htmlspecialchars($categoria); ?></h4>
-                                <ul>
-                                    <?php if (!empty($subcategorias)): ?>
-                                        <?php foreach ($subcategorias as $sub): ?>
-                                            <li>
-                                                <a href="productos.php?categoria=<?php echo urlencode($categoria); ?>&subcategoria=<?php echo urlencode($sub); ?>">
-                                                    <?php echo htmlspecialchars($sub); ?>
-                                                </a>
-                                            </li>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
+   <nav class="nav-secondary">
+    <div class="nav-content">
+        <a href="home.php" class="nav-link">INICIO</a>
+        <div class="dropdown">
+            <a href="#" class="nav-link dropbtn">CATEGORÍAS ▼</a>
+            <div class="dropdown-content">
+                <div class="categorias-container">
+                    <?php foreach ($categorias as $categoria => $subcategorias): ?>
+                        <div class="columna">
+                            <h4><?php echo htmlspecialchars($categoria); ?></h4>
+                            <ul>
+                                <?php if (!empty($subcategorias)): ?>
+                                    <?php foreach ($subcategorias as $sub): ?>
                                         <li>
-                                            <a href="productos.php?categoria=<?php echo urlencode($categoria); ?>">
-                                                Ver <?php echo htmlspecialchars($categoria); ?>
+                                            <a href="productos.php?categoria=<?php echo urlencode($categoria); ?>&subcategoria=<?php echo urlencode($sub); ?>">
+                                                <?php echo htmlspecialchars($sub); ?>
                                             </a>
                                         </li>
-                                    <?php endif; ?>
-                                </ul>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <li>
+                                        <a href="productos.php?categoria=<?php echo urlencode($categoria); ?>">
+                                            Ver <?php echo htmlspecialchars($categoria); ?>
+                                        </a>
+                                    </li>
+                                <?php endif; ?>
+                            </ul>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
-            <a href="#" class="nav-link">SOBRE NOSOTROS</a>
-            <a href="#" class="nav-link">CONTACTO</a>
         </div>
-    </nav>
+        <a href="#" class="nav-link">SOBRE NOSOTROS</a>
+        <a href="#" class="nav-link">CONTACTO</a>
+    </div>
+</nav>
 
     <!-- Breadcrumb -->
     <div class="breadcrumb">
@@ -1219,22 +1269,21 @@ document.addEventListener('DOMContentLoaded', function() {
     cargarVistaPrevia();
     
     // Event listeners para búsqueda
-    if (searchInput) {
-        searchInput.addEventListener('input', searchProducts);
-    }
-    
-    if (searchBtn) {
-        searchBtn.addEventListener('click', searchProducts);
-    }
-    
-    // Búsqueda con Enter
-    if (searchInput) {
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchProducts();
-            }
-        });
-    }
+  searchInput.addEventListener('input', searchProducts);
+            searchBtn.addEventListener('click', searchProducts);
+            sortSelect.addEventListener('change', sortProducts);
+
+            viewBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    changeView(btn.dataset.view);
+                });
+            });
+
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    searchProducts();
+                }
+            });
     
     console.log('Sistemas de autenticación, carrito y búsqueda inicializados correctamente');
 });
