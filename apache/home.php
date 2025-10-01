@@ -183,7 +183,21 @@ $productos_filtrados = obtenerProductosFiltrados($conn, $categoria, $subcategori
 
 
 
-
+if (empty($categoria) && empty($subcategoria)) {
+    // Si no hay filtros, obtener todos los productos
+    $sql = "SELECT a.IdProducto, a.NomProducto, a.Marca, a.TipoProducto, a.Precio, a.Precio_Unitario, i.ruta
+            FROM articulo a
+            LEFT JOIN img i ON a.IdProducto = i.idProd";
+    $result_productos = $conn->query($sql);
+    $productos_a_mostrar = [];
+    if ($result_productos && $result_productos->num_rows > 0) {
+        while ($row = $result_productos->fetch_assoc()) {
+            $productos_a_mostrar[] = $row;
+        }
+    }
+} else {
+    $productos_a_mostrar = $productos_filtrados;
+}
 ?>
 
 
@@ -512,7 +526,7 @@ $productos_filtrados = obtenerProductosFiltrados($conn, $categoria, $subcategori
     </div>
 
  <div class="products-container">
-        <div class="products-grid" id="products-grid">
+         <div class="products-grid" id="products-grid">
             <?php
             if (!empty($productos_a_mostrar)) {
                 $contador = 0;
@@ -549,10 +563,8 @@ $productos_filtrados = obtenerProductosFiltrados($conn, $categoria, $subcategori
                             <?php if (!empty($badgeClass)): ?>
                                 <div class="product-badge <?php echo $badgeClass; ?>"><?php echo $badgeText; ?></div>
                             <?php endif; ?>
-                            <div class="product-actions">
-                                <button class="action-btn" title="Vista rápida">👁️</button>
-                                <button class="action-btn" title="Agregar a favoritos">♡</button>
-                            </div>
+                            
+                        ¿
                         </div>
                         <div class="product-info">
                             <div class="product-brand"><?php echo htmlspecialchars($row['Marca']); ?></div>
@@ -570,7 +582,8 @@ $productos_filtrados = obtenerProductosFiltrados($conn, $categoria, $subcategori
             } else {
                 echo '<p>No hay productos disponibles</p>';
             }
-    ?>
+            ?>
+        </div>
 
     <!-- Estado vacío (oculto por defecto) -->
      <!-- Estado vacío (ejemplo, oculto por defecto) -->
